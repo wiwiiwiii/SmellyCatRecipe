@@ -6,6 +6,7 @@
     <view class="hero-subtitle">{{heroSubtitle}}</view>
     <view class="hero-actions">
       <button wx:if="{{hasLatestOrder}}" class="hero-action hero-action-primary" bindtap="goLatestOrder">看小愿望状态</button>
+      <button class="hero-action" bindtap="goHistory">吃过的</button>
       <button class="hero-action" bindtap="goOwnerDev">主人端测试</button>
     </view>
   </view>

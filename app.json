@@ -2,6 +2,7 @@
   "pages": [
     "pages/menu/menu",
     "pages/order/order",
+    "pages/history/history",
     "pages/owner/owner"
   ],
   "window": {

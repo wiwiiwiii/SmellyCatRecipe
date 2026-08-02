@@ -176,6 +176,12 @@ Page({
     });
   },
 
+  goHistory() {
+    wx.navigateTo({
+      url: "/pages/history/history",
+    });
+  },
+
   refreshViewModel() {
     const viewModel = buildMenuViewModel({
       mealTime: this.data.mealTime,

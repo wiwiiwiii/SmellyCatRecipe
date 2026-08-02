@@ -1,0 +1,33 @@
+<view class="page safe-bottom">
+  <view class="hero">
+    <image class="hero-logo" src="/static/img/logo.jpg" mode="aspectFill" />
+    <view class="hero-kicker">吃过的</view>
+    <view class="hero-title">{{heroTitle}}</view>
+    <view class="hero-subtitle">{{heroSubtitle}}</view>
+    <button class="cat-link" bindtap="backToMenu">回去点餐</button>
+  </view>
+
+  <view wx:if="{{hasOrders}}" class="history-list">
+    <view
+      wx:for="{{orders}}"
+      wx:key="id"
+      class="history-card"
+    >
+      <view class="history-head">
+        <view>
+          <view class="history-title">{{item.mealTimeText}} · {{item.moodText}}</view>
+          <view class="history-items">{{item.itemsText}}</view>
+        </view>
+        <view class="status-pill">{{item.statusText}}</view>
+      </view>
+      <view class="history-time">{{item.updatedAt}}</view>
+      <button class="repeat-button" data-id="{{item.id}}" bindtap="repeatOrder">{{item.repeatLabel}}</button>
+    </view>
+  </view>
+
+  <view wx:else class="empty-card">
+    <view class="empty-title">{{emptyTitle}}</view>
+    <view class="empty-note">{{emptyNote}}</view>
+    <button class="primary-button" bindtap="backToMenu">先去点餐</button>
+  </view>
+</view>
