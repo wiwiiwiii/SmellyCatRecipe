@@ -1,0 +1,67 @@
+<view class="page safe-bottom">
+  <block wx:if="{{hasOrder}}">
+    <view class="status-card">
+      <image class="status-logo" src="/static/img/logo.jpg" mode="aspectFill" />
+      <view class="status-label">点餐成功</view>
+      <view class="status-title">咪的小愿望已经交给主人啦</view>
+      <view class="status-subtitle">{{statusCopy}}</view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">这顿是 {{mealTimeText}}</view>
+      <view class="section-note">{{moodText}}</view>
+      <view class="order-item" wx:for="{{order.items}}" wx:key="id">
+        <view>
+          <view class="dish-name">{{item.name}}</view>
+          <view class="dish-desc">{{item.note || '咪想吃这个'}}</view>
+        </view>
+        <view class="dish-time">x{{item.quantity}}</view>
+      </view>
+
+      <view wx:if="{{hasWishItems}}" class="wish-block">
+        <view class="wish-title">菜单外的小愿望</view>
+        <view class="order-item" wx:for="{{order.wishItems}}" wx:key="id">
+          <view>
+            <view class="dish-name">{{item.name}}</view>
+            <view class="dish-desc">{{item.note || '想让主人看看这个'}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">备注</view>
+      <view class="note">{{order.note || '无'}}</view>
+    </view>
+
+    <view class="section" wx:if="{{hasEvents}}">
+      <view class="section-title">订单时间线</view>
+      <view class="event-item" wx:for="{{order.events}}" wx:key="id">
+        <view class="event-dot"></view>
+        <view>
+          <view class="event-type">{{item.type}}</view>
+          <view class="event-time">{{item.createdAt}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{hasNotificationWarning}}" class="warning-box">
+      {{order.notificationSummary.latestWarning || '提醒可能没发出去，稍后可以再看一下。'}}
+    </view>
+
+    <view class="message-box">
+      <text>{{message}}</text>
+    </view>
+
+    <button class="primary-button" bindtap="copyOrder">复制备用文案</button>
+    <button class="ghost-button" bindtap="backToMenu">继续加菜</button>
+  </block>
+
+  <block wx:else>
+    <view class="empty-card">
+      <view class="empty-title">还没有点餐单</view>
+      <view class="empty-note">先回到首页选几道想吃的菜。</view>
+      <button class="primary-button" bindtap="backToMenu">去点餐</button>
+    </view>
+  </block>
+</view>

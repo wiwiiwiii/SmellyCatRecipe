@@ -1,0 +1,15 @@
+{
+  "pages": [
+    "pages/menu/menu",
+    "pages/order/order"
+  ],
+  "window": {
+    "navigationBarTitleText": "咪的喂食器",
+    "navigationBarBackgroundColor": "#17110E",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#17110E",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

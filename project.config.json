@@ -1,0 +1,63 @@
+{
+  "description": "咪的喂食器微信小程序启动项目",
+  "packOptions": {
+    "ignore": [
+      {
+        "value": "docs",
+        "type": "folder"
+      },
+      {
+        "value": "tests",
+        "type": "folder"
+      },
+      {
+        "value": "package.json",
+        "type": "file"
+      },
+      {
+        "value": "README.md",
+        "type": "file"
+      },
+      {
+        "value": "LICENSE",
+        "type": "file"
+      }
+    ],
+    "include": []
+  },
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "compileHotReLoad": true,
+    "bigPackageSizeSupport": false,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "compileType": "miniprogram",
+  "libVersion": "3.7.12",
+  "appid": "wx67278c858c8cf30f",
+  "projectname": "咪的喂食器",
+  "miniprogramRoot": "./",
+  "condition": {},
+  "simulatorPluginLibVersion": {},
+  "editorSetting": {}
+}

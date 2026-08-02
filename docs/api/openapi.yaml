@@ -1,0 +1,1093 @@
+openapi: 3.0.3
+info:
+  title: Smelly Cat Feeder API
+  version: 0.1.0
+  description: API contract for the "咪的喂食器" WeChat mini-program and self-hosted backend.
+servers:
+  - url: https://api.example.com/v1
+    description: Replace with the production HTTPS API domain before launch.
+security:
+  - bearerAuth: []
+tags:
+  - name: Auth
+  - name: Menu
+  - name: Orders
+  - name: Replacements
+  - name: Owner Actions
+  - name: Notifications
+paths:
+  /auth/wechat-login:
+    post:
+      tags:
+        - Auth
+      summary: Exchange a WeChat login code for an app session token.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WechatLoginRequest"
+      responses:
+        "200":
+          description: Login succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+  /auth/me:
+    get:
+      tags:
+        - Auth
+      summary: Return the current authenticated user.
+      responses:
+        "200":
+          description: Current user.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - user
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Error"
+  /menu-items:
+    get:
+      tags:
+        - Menu
+      summary: List or search menu items.
+      parameters:
+        - $ref: "#/components/parameters/MealTimeQuery"
+        - $ref: "#/components/parameters/MoodQuery"
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: Keyword search.
+        - name: includeHidden
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: Owner-only flag for showing hidden menu items.
+        - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/LimitQuery"
+      responses:
+        "200":
+          description: Menu items.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/MenuItem"
+                  nextCursor:
+                    type: string
+                    nullable: true
+        "401":
+          $ref: "#/components/responses/Error"
+    post:
+      tags:
+        - Menu
+      summary: Create a menu item.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MenuItemInput"
+      responses:
+        "201":
+          description: Menu item created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - item
+                properties:
+                  item:
+                    $ref: "#/components/schemas/MenuItem"
+        "403":
+          $ref: "#/components/responses/Error"
+  /menu-items/{menuItemId}:
+    patch:
+      tags:
+        - Menu
+      summary: Update a menu item.
+      parameters:
+        - $ref: "#/components/parameters/MenuItemIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MenuItemPatch"
+      responses:
+        "200":
+          description: Menu item updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - item
+                properties:
+                  item:
+                    $ref: "#/components/schemas/MenuItem"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orders:
+    get:
+      tags:
+        - Orders
+      summary: List current or historical orders.
+      parameters:
+        - name: scope
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - current
+              - history
+        - name: roleView
+          in: query
+          schema:
+            $ref: "#/components/schemas/Role"
+        - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/LimitQuery"
+      responses:
+        "200":
+          description: Orders.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - orders
+                properties:
+                  orders:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/OrderSummary"
+                  nextCursor:
+                    type: string
+                    nullable: true
+        "401":
+          $ref: "#/components/responses/Error"
+    post:
+      tags:
+        - Orders
+      summary: Create an order.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderRequest"
+      responses:
+        "201":
+          description: Order created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - order
+                properties:
+                  order:
+                    $ref: "#/components/schemas/Order"
+        "400":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+  /orders/{orderId}:
+    get:
+      tags:
+        - Orders
+      summary: Get order detail.
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      responses:
+        "200":
+          description: Order detail.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - order
+                properties:
+                  order:
+                    $ref: "#/components/schemas/Order"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orders/{orderId}/repeat-draft:
+    post:
+      tags:
+        - Orders
+      summary: Build a repeat-order draft from a historical order.
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      responses:
+        "200":
+          description: Repeat draft.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderDraft"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orders/{orderId}/replacement-requests:
+    post:
+      tags:
+        - Replacements
+      summary: Request replacements for one or more order items.
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReplacementRequest"
+      responses:
+        "201":
+          description: Replacement request created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - order
+                  - replacementRequest
+                properties:
+                  order:
+                    $ref: "#/components/schemas/Order"
+                  replacementRequest:
+                    $ref: "#/components/schemas/ReplacementRequest"
+        "400":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+  /orders/{orderId}/replacement-requests/{replacementRequestId}/confirm:
+    post:
+      tags:
+        - Replacements
+      summary: Confirm a replacement request.
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+        - $ref: "#/components/parameters/ReplacementRequestIdPath"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note:
+                  type: string
+      responses:
+        "200":
+          description: Replacement confirmed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - order
+                  - replacementRequest
+                properties:
+                  order:
+                    $ref: "#/components/schemas/Order"
+                  replacementRequest:
+                    $ref: "#/components/schemas/ReplacementRequest"
+        "400":
+          $ref: "#/components/responses/Error"
+  /orders/{orderId}/replacement-requests/{replacementRequestId}/reject:
+    post:
+      tags:
+        - Replacements
+      summary: Reject a replacement request.
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+        - $ref: "#/components/parameters/ReplacementRequestIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectReplacementRequest"
+      responses:
+        "200":
+          description: Replacement rejected.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - order
+                  - replacementRequest
+                properties:
+                  order:
+                    $ref: "#/components/schemas/Order"
+                  replacementRequest:
+                    $ref: "#/components/schemas/ReplacementRequest"
+        "400":
+          $ref: "#/components/responses/Error"
+  /orders/{orderId}/accept:
+    post:
+      tags:
+        - Owner Actions
+      summary: Accept an order.
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      responses:
+        "200":
+          description: Order accepted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - order
+                properties:
+                  order:
+                    $ref: "#/components/schemas/Order"
+        "400":
+          $ref: "#/components/responses/Error"
+  /orders/{orderId}/start-cooking:
+    post:
+      tags:
+        - Owner Actions
+      summary: Mark an order as cooking.
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      responses:
+        "200":
+          description: Order is cooking.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - order
+                properties:
+                  order:
+                    $ref: "#/components/schemas/Order"
+        "400":
+          $ref: "#/components/responses/Error"
+  /orders/{orderId}/complete:
+    post:
+      tags:
+        - Owner Actions
+      summary: Mark an order as completed.
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      responses:
+        "200":
+          description: Order completed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - order
+                properties:
+                  order:
+                    $ref: "#/components/schemas/Order"
+        "400":
+          $ref: "#/components/responses/Error"
+  /orders/{orderId}/cancel:
+    post:
+      tags:
+        - Orders
+      summary: Cancel an order.
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Order cancelled.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - order
+                properties:
+                  order:
+                    $ref: "#/components/schemas/Order"
+        "400":
+          $ref: "#/components/responses/Error"
+  /notification-templates:
+    get:
+      tags:
+        - Notifications
+      summary: Return notification template keys and environment-specific IDs.
+      responses:
+        "200":
+          description: Notification templates.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - templates
+                properties:
+                  templates:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/NotificationTemplate"
+  /notification-subscriptions:
+    post:
+      tags:
+        - Notifications
+      summary: Record wx.requestSubscribeMessage results.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordSubscriptionRequest"
+      responses:
+        "200":
+          description: Subscription results recorded.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - recorded
+                properties:
+                  recorded:
+                    type: boolean
+        "400":
+          $ref: "#/components/responses/Error"
+  /notification-logs:
+    get:
+      tags:
+        - Notifications
+      summary: List notification send logs.
+      parameters:
+        - name: orderId
+          in: query
+          schema:
+            type: string
+        - $ref: "#/components/parameters/CursorQuery"
+        - $ref: "#/components/parameters/LimitQuery"
+      responses:
+        "200":
+          description: Notification logs.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - logs
+                properties:
+                  logs:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/NotificationLog"
+                  nextCursor:
+                    type: string
+                    nullable: true
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    CursorQuery:
+      name: cursor
+      in: query
+      schema:
+        type: string
+    LimitQuery:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    MealTimeQuery:
+      name: mealTime
+      in: query
+      schema:
+        $ref: "#/components/schemas/MealTime"
+    MoodQuery:
+      name: mood
+      in: query
+      schema:
+        $ref: "#/components/schemas/Mood"
+    MenuItemIdPath:
+      name: menuItemId
+      in: path
+      required: true
+      schema:
+        type: string
+    OrderIdPath:
+      name: orderId
+      in: path
+      required: true
+      schema:
+        type: string
+    ReplacementRequestIdPath:
+      name: replacementRequestId
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    Error:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    Role:
+      type: string
+      enum:
+        - cat
+        - owner
+    MealTime:
+      type: string
+      enum:
+        - lunch
+        - dinner
+        - late_night
+    Mood:
+      type: string
+      enum:
+        - hungry
+        - hot
+        - meat
+        - sweet
+        - tired
+        - owner_pick
+    OrderStatus:
+      type: string
+      enum:
+        - submitted
+        - replacement_requested
+        - accepted
+        - cooking
+        - completed
+        - cancelled
+    WechatLoginRequest:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+        devRoleOverride:
+          $ref: "#/components/schemas/Role"
+    AuthResponse:
+      type: object
+      required:
+        - token
+        - user
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+    User:
+      type: object
+      required:
+        - id
+        - role
+        - displayName
+        - openidBound
+      properties:
+        id:
+          type: string
+        role:
+          $ref: "#/components/schemas/Role"
+        displayName:
+          type: string
+        openidBound:
+          type: boolean
+    MenuItem:
+      allOf:
+        - $ref: "#/components/schemas/MenuItemInput"
+        - type: object
+          required:
+            - id
+            - createdAt
+            - updatedAt
+          properties:
+            id:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+    MenuItemInput:
+      type: object
+      required:
+        - name
+        - description
+        - catReason
+        - category
+        - tags
+        - recommendedMealTimes
+        - recommendedMoods
+        - estimatedMinutes
+        - hidden
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        catReason:
+          type: string
+        category:
+          type: string
+          enum:
+            - main
+            - snack
+            - drink
+            - dessert
+        tags:
+          type: array
+          items:
+            type: string
+        recommendedMealTimes:
+          type: array
+          items:
+            $ref: "#/components/schemas/MealTime"
+        recommendedMoods:
+          type: array
+          items:
+            $ref: "#/components/schemas/Mood"
+        estimatedMinutes:
+          type: integer
+          minimum: 1
+        hidden:
+          type: boolean
+    MenuItemPatch:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        catReason:
+          type: string
+        category:
+          type: string
+          enum:
+            - main
+            - snack
+            - drink
+            - dessert
+        tags:
+          type: array
+          items:
+            type: string
+        recommendedMealTimes:
+          type: array
+          items:
+            $ref: "#/components/schemas/MealTime"
+        recommendedMoods:
+          type: array
+          items:
+            $ref: "#/components/schemas/Mood"
+        estimatedMinutes:
+          type: integer
+          minimum: 1
+        hidden:
+          type: boolean
+    CreateOrderRequest:
+      type: object
+      required:
+        - mealTime
+        - mood
+        - items
+        - wishItems
+      properties:
+        mealTime:
+          $ref: "#/components/schemas/MealTime"
+        mood:
+          $ref: "#/components/schemas/Mood"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateOrderItem"
+        wishItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateWishItem"
+        note:
+          type: string
+    CreateOrderItem:
+      type: object
+      required:
+        - menuItemId
+        - quantity
+      properties:
+        menuItemId:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+        note:
+          type: string
+    CreateWishItem:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        note:
+          type: string
+    OrderDraft:
+      allOf:
+        - $ref: "#/components/schemas/CreateOrderRequest"
+    OrderSummary:
+      type: object
+      required:
+        - id
+        - mealTime
+        - mood
+        - status
+        - itemNames
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        mealTime:
+          $ref: "#/components/schemas/MealTime"
+        mood:
+          $ref: "#/components/schemas/Mood"
+        status:
+          $ref: "#/components/schemas/OrderStatus"
+        itemNames:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Order:
+      type: object
+      required:
+        - id
+        - catUserId
+        - ownerUserId
+        - mealTime
+        - mood
+        - status
+        - items
+        - wishItems
+        - events
+        - replacementRequests
+        - notificationSummary
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        catUserId:
+          type: string
+        ownerUserId:
+          type: string
+        mealTime:
+          $ref: "#/components/schemas/MealTime"
+        mood:
+          $ref: "#/components/schemas/Mood"
+        status:
+          $ref: "#/components/schemas/OrderStatus"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        wishItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/WishItem"
+        note:
+          type: string
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderEvent"
+        replacementRequests:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReplacementRequest"
+        notificationSummary:
+          $ref: "#/components/schemas/NotificationSummary"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    OrderItem:
+      type: object
+      required:
+        - id
+        - menuItemId
+        - name
+        - quantity
+      properties:
+        id:
+          type: string
+        menuItemId:
+          type: string
+        name:
+          type: string
+        quantity:
+          type: integer
+        note:
+          type: string
+        replacementForItemId:
+          type: string
+          nullable: true
+    WishItem:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        note:
+          type: string
+    OrderEvent:
+      type: object
+      required:
+        - id
+        - type
+        - actorRole
+        - createdAt
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+            - submitted
+            - replacement_requested
+            - replacement_confirmed
+            - replacement_rejected
+            - accepted
+            - cooking
+            - completed
+            - cancelled
+        actorRole:
+          $ref: "#/components/schemas/Role"
+        note:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    CreateReplacementRequest:
+      type: object
+      required:
+        - replacements
+      properties:
+        replacements:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/ReplacementInput"
+    ReplacementInput:
+      type: object
+      required:
+        - originalItemId
+        - reason
+      properties:
+        originalItemId:
+          type: string
+        replacementMenuItemId:
+          type: string
+        replacementWishName:
+          type: string
+        reason:
+          type: string
+    ReplacementRequest:
+      type: object
+      required:
+        - id
+        - status
+        - replacements
+        - createdAt
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum:
+            - pending
+            - confirmed
+            - rejected
+        replacements:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReplacementInput"
+        catNote:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        decidedAt:
+          type: string
+          format: date-time
+          nullable: true
+    RejectReplacementRequest:
+      type: object
+      required:
+        - nextAction
+      properties:
+        nextAction:
+          type: string
+          enum:
+            - revise
+            - cancel
+        note:
+          type: string
+    NotificationTemplate:
+      type: object
+      required:
+        - templateKey
+        - templateId
+        - recipientRole
+        - sourceAction
+      properties:
+        templateKey:
+          type: string
+          enum:
+            - owner_new_order
+            - cat_replacement_requested
+            - cat_order_accepted
+            - cat_order_cooking
+            - cat_order_completed
+        templateId:
+          type: string
+        recipientRole:
+          $ref: "#/components/schemas/Role"
+        sourceAction:
+          type: string
+    RecordSubscriptionRequest:
+      type: object
+      required:
+        - sourceAction
+        - results
+      properties:
+        sourceAction:
+          type: string
+        results:
+          type: array
+          items:
+            type: object
+            required:
+              - templateKey
+              - status
+            properties:
+              templateKey:
+                type: string
+              status:
+                type: string
+                enum:
+                  - accept
+                  - reject
+                  - ban
+    NotificationSummary:
+      type: object
+      required:
+        - hasWarning
+      properties:
+        hasWarning:
+          type: boolean
+        latestWarning:
+          type: string
+          nullable: true
+    NotificationLog:
+      type: object
+      required:
+        - id
+        - orderId
+        - templateKey
+        - recipientUserId
+        - status
+        - createdAt
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        templateKey:
+          type: string
+        recipientUserId:
+          type: string
+        status:
+          type: string
+          enum:
+            - sent
+            - skipped_not_authorized
+            - failed
+        errorCode:
+          type: string
+          nullable: true
+        errorMessage:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true

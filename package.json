@@ -1,0 +1,13 @@
+{
+  "name": "smelly-cat-recipe",
+  "version": "0.1.0",
+  "private": true,
+  "description": "咪的喂食器小程序",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "check:js": "find . -name '*.js' -not -path './node_modules/*' -not -path './.superpowers/*' -print0 | xargs -0 -n1 node --check",
+    "check:project": "node scripts/check-project.js",
+    "check": "npm run check:js && npm run check:project && npm test"
+  },
+  "license": "GPL-3.0-only"
+}

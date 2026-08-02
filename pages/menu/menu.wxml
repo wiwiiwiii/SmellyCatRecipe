@@ -1,0 +1,117 @@
+<view class="page safe-bottom">
+  <view class="hero">
+    <image class="hero-logo" src="/static/img/logo.jpg" mode="aspectFill" />
+    <view class="hero-kicker">咪的喂食器</view>
+    <view class="hero-title">{{heroTitle || '咪今天想吃什么？'}}</view>
+    <view class="hero-subtitle">{{heroSubtitle}}</view>
+  </view>
+
+  <view class="section">
+    <view class="section-head">
+      <view>
+        <view class="section-title">先选哪一顿</view>
+        <view class="section-note">午饭、晚饭、夜宵都可以</view>
+      </view>
+      <view class="selected-pill">{{totalSelectedCount}} 个小愿望</view>
+    </view>
+
+    <scroll-view class="chip-scroll" scroll-x enable-flex>
+      <button
+        wx:for="{{mealTimes}}"
+        wx:key="value"
+        class="chip {{item.selected ? 'chip-active' : ''}}"
+        data-value="{{item.value}}"
+        bindtap="selectMealTime"
+      >
+        {{item.label}}
+      </button>
+    </scroll-view>
+
+    <view class="mood-grid">
+      <button
+        wx:for="{{moods}}"
+        wx:key="value"
+        class="mood-chip {{item.selected ? 'mood-chip-active' : ''}}"
+        data-value="{{item.value}}"
+        bindtap="selectMood"
+      >
+        {{item.label}}
+      </button>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">找找想吃的</view>
+    <input
+      class="search-input"
+      placeholder="搜菜名，比如鸡翅、乌冬、甜的"
+      value="{{query}}"
+      bindinput="onSearchInput"
+    />
+
+    <view wx:if="{{showWishPrompt}}" class="wish-prompt">
+      <view class="wish-title">菜单里还没有这个，要让主人看看吗？</view>
+      <input
+        class="wish-input"
+        placeholder="给这个小愿望加一句备注"
+        value="{{wishNote}}"
+        bindinput="onWishNoteInput"
+      />
+      <button class="wish-button" bindtap="addWishItem">加入小愿望</button>
+    </view>
+
+    <view wx:if="{{wishItems.length}}" class="wish-list">
+      <view
+        wx:for="{{wishItems}}"
+        wx:key="name"
+        class="wish-item"
+      >
+        <view>
+          <view class="wish-item-name">{{item.name}}</view>
+          <view class="wish-item-note">{{item.note || '咪想让主人看看这个'}}</view>
+        </view>
+        <button class="wish-remove" data-index="{{index}}" bindtap="removeWishItem">移除</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="dish-list">
+    <view
+      wx:for="{{recommendedItems}}"
+      wx:key="id"
+      class="dish-card {{item.selected ? 'dish-card-selected' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="toggleDish"
+    >
+      <view class="dish-content">
+        <view class="dish-row">
+          <view class="dish-name">{{item.name}}</view>
+          <view class="dish-time">{{item.estimatedMinutes}} 分钟</view>
+        </view>
+        <view class="dish-reason">{{item.catReason}}</view>
+        <view class="dish-desc">{{item.description}}</view>
+        <view class="dish-tags">{{item.tagsText}}</view>
+      </view>
+      <view class="dish-check">{{item.selected ? '咪想吃' : '点这个'}}</view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">跟主人说一句</view>
+    <textarea
+      class="note-input"
+      maxlength="80"
+      placeholder="比如少辣、多放葱、米饭少一点"
+      value="{{note}}"
+      bindinput="onNoteInput"
+    />
+  </view>
+
+  <view class="submit-bar">
+    <view>
+      <view class="submit-title">咪点好啦</view>
+      <view class="submit-note">{{totalSelectedCount}} 个小愿望，给主人看看</view>
+    </view>
+    <button class="submit-button" bindtap="submitOrder">生成点餐单</button>
+  </view>
+</view>
