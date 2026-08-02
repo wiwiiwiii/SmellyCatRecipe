@@ -4,7 +4,10 @@
     <view class="hero-kicker">咪的喂食器</view>
     <view class="hero-title">{{heroTitle || '咪今天想吃什么？'}}</view>
     <view class="hero-subtitle">{{heroSubtitle}}</view>
-    <button class="dev-owner-link" bindtap="goOwnerDev">主人端测试</button>
+    <view class="hero-actions">
+      <button wx:if="{{hasLatestOrder}}" class="hero-action hero-action-primary" bindtap="goLatestOrder">看小愿望状态</button>
+      <button class="hero-action" bindtap="goOwnerDev">主人端测试</button>
+    </view>
   </view>
 
   <view class="section">
