@@ -34,17 +34,6 @@
       <view class="note">{{order.note || '无'}}</view>
     </view>
 
-    <view class="section" wx:if="{{hasEvents}}">
-      <view class="section-title">订单时间线</view>
-      <view class="event-item" wx:for="{{order.events}}" wx:key="id">
-        <view class="event-dot"></view>
-        <view>
-          <view class="event-type">{{item.type}}</view>
-          <view class="event-time">{{item.createdAt}}</view>
-        </view>
-      </view>
-    </view>
-
     <view wx:if="{{hasNotificationWarning}}" class="warning-box">
       {{order.notificationSummary.latestWarning || '提醒可能没发出去，稍后可以再看一下。'}}
     </view>

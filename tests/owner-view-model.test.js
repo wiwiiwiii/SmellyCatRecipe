@@ -69,6 +69,8 @@ test("owner list view summarizes current orders with warm owner copy", () => {
 
 test("owner detail view exposes the right action for submitted, accepted and cooking orders", () => {
   const submitted = buildOwnerOrderDetailView({ order: baseOrder });
+  assert.equal(submitted.events, undefined);
+  assert.equal(submitted.hasEvents, undefined);
   assert.deepEqual(submitted.primaryAction, {
     action: "accept",
     label: "主人收到啦",

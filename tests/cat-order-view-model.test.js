@@ -45,6 +45,7 @@ test("cat order page loads owner-updated status from api instead of stale storag
   assert.equal(loaded.order.status, ORDER_STATUS.ACCEPTED);
   assert.equal(storage.getStorageSync("latestOrder").status, ORDER_STATUS.ACCEPTED);
   assert.equal(view.statusCopy, "主人收到啦，咪等一下");
+  assert.equal(view.hasEvents, undefined);
 });
 
 test("cat menu can detect whether there is a latest order to revisit", () => {
