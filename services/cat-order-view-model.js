@@ -53,7 +53,6 @@ function buildCatOrderView(order) {
   };
 
   return {
-    hasEvents: Array.isArray(order.events) && order.events.length > 0,
     hasNotificationWarning: Boolean(order.notificationSummary && order.notificationSummary.hasWarning),
     hasWishItems: Array.isArray(order.wishItems) && order.wishItems.length > 0,
     mealTimeText: MEAL_TIME_LABELS[order.mealTime] || order.mealTime,
@@ -67,7 +66,6 @@ function buildCatOrderView(order) {
 function buildEmptyCatOrderView() {
   return {
     hasOrder: false,
-    hasEvents: false,
     hasNotificationWarning: false,
     hasWishItems: false,
     mealTimeText: "",

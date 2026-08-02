@@ -45,8 +45,6 @@ function buildOwnerOrderDetailView({ order }) {
 
   return {
     canAct: Boolean(primaryAction),
-    events: Array.isArray(order.events) ? order.events : [],
-    hasEvents: Array.isArray(order.events) && order.events.length > 0,
     hasWishItems: Array.isArray(order.wishItems) && order.wishItems.length > 0,
     mealTimeText: MEAL_TIME_LABELS[order.mealTime] || order.mealTime,
     moodText: MOOD_LABELS[order.mood] || order.mood,

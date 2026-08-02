@@ -10,7 +10,6 @@ const api = getDevApiClient();
 Page({
   data: {
     hasOrder: false,
-    hasEvents: false,
     hasNotificationWarning: false,
     hasWishItems: false,
     mealTimeText: "",

@@ -117,31 +117,6 @@
   line-height: 1.5;
 }
 
-.event-item {
-  display: flex;
-  gap: 16rpx;
-  padding: 18rpx 0;
-}
-
-.event-dot {
-  width: 16rpx;
-  height: 16rpx;
-  margin-top: 8rpx;
-  border-radius: 50%;
-  background: #f2a65a;
-}
-
-.event-type {
-  color: #f8ead8;
-  font-size: 25rpx;
-}
-
-.event-time {
-  margin-top: 6rpx;
-  color: #8f735f;
-  font-size: 21rpx;
-}
-
 .warning-box {
   margin-top: 28rpx;
   padding: 22rpx 24rpx;
