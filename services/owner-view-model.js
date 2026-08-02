@@ -28,6 +28,8 @@ function buildOwnerOrderListView({ orders = [] }) {
     mealTimeText: MEAL_TIME_LABELS[order.mealTime] || order.mealTime,
     moodText: MOOD_LABELS[order.mood] || order.mood,
     statusText: getStatusCopy(order.status, ROLE.OWNER),
+    hasUnreadUpdate: Boolean(order.hasUnreadUpdate),
+    unreadLabel: order.hasUnreadUpdate ? "新点餐" : "",
   }));
 
   return {
@@ -45,13 +47,20 @@ function buildOwnerOrderDetailView({ order }) {
 
   return {
     canAct: Boolean(primaryAction),
+    hasUnreadUpdate: Boolean(order.unreadByRoles && order.unreadByRoles[ROLE.OWNER]),
     hasWishItems: Array.isArray(order.wishItems) && order.wishItems.length > 0,
     mealTimeText: MEAL_TIME_LABELS[order.mealTime] || order.mealTime,
     moodText: MOOD_LABELS[order.mood] || order.mood,
     order,
     primaryAction,
     statusText: getStatusCopy(order.status, ROLE.OWNER),
+    unreadLabel: getOwnerUnreadLabel(order),
   };
+}
+
+function getOwnerUnreadLabel(order) {
+  if (!(order.unreadByRoles && order.unreadByRoles[ROLE.OWNER])) return "";
+  return order.status === ORDER_STATUS.SUBMITTED ? "有新点餐" : "有新进展";
 }
 
 function resolveOwnerActiveOrderId({ orders = [], preferredOrderId = "" }) {

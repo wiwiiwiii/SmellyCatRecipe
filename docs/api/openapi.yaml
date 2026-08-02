@@ -235,6 +235,29 @@ paths:
                     $ref: "#/components/schemas/Order"
         "404":
           $ref: "#/components/responses/Error"
+  /orders/{orderId}/read:
+    post:
+      tags:
+        - Orders
+      summary: Mark the order as read for the current authenticated role.
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      responses:
+        "200":
+          description: Order read marker cleared for the current role.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - order
+                properties:
+                  order:
+                    $ref: "#/components/schemas/Order"
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
   /orders/{orderId}/repeat-draft:
     post:
       tags:
@@ -781,6 +804,7 @@ components:
         - mealTime
         - mood
         - status
+        - hasUnreadUpdate
         - itemNames
         - createdAt
         - updatedAt
@@ -793,6 +817,8 @@ components:
           $ref: "#/components/schemas/Mood"
         status:
           $ref: "#/components/schemas/OrderStatus"
+        hasUnreadUpdate:
+          type: boolean
         itemNames:
           type: array
           items:
@@ -816,6 +842,7 @@ components:
         - wishItems
         - events
         - replacementRequests
+        - unreadByRoles
         - notificationSummary
         - createdAt
         - updatedAt
@@ -850,6 +877,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ReplacementRequest"
+        unreadByRoles:
+          $ref: "#/components/schemas/ReadMarkers"
+        lastActorRole:
+          $ref: "#/components/schemas/Role"
         notificationSummary:
           $ref: "#/components/schemas/NotificationSummary"
         createdAt:
@@ -858,6 +889,16 @@ components:
         updatedAt:
           type: string
           format: date-time
+    ReadMarkers:
+      type: object
+      required:
+        - cat
+        - owner
+      properties:
+        cat:
+          type: boolean
+        owner:
+          type: boolean
     OrderItem:
       type: object
       required:

@@ -54,6 +54,7 @@ test("owner list view summarizes current orders with warm owner copy", () => {
         mood: baseOrder.mood,
         status: baseOrder.status,
         itemNames: ["番茄炒蛋盖饭", "咖喱猪排饭"],
+        hasUnreadUpdate: true,
         createdAt: baseOrder.createdAt,
         updatedAt: baseOrder.updatedAt,
       },
@@ -65,12 +66,24 @@ test("owner list view summarizes current orders with warm owner copy", () => {
   assert.equal(view.orders[0].mealTimeText, "晚饭");
   assert.equal(view.orders[0].statusText, "咪点好啦，等主人看一下");
   assert.equal(view.orders[0].itemsText, "番茄炒蛋盖饭、咖喱猪排饭");
+  assert.equal(view.orders[0].hasUnreadUpdate, true);
+  assert.equal(view.orders[0].unreadLabel, "新点餐");
 });
 
 test("owner detail view exposes the right action for submitted, accepted and cooking orders", () => {
-  const submitted = buildOwnerOrderDetailView({ order: baseOrder });
+  const submitted = buildOwnerOrderDetailView({
+    order: {
+      ...baseOrder,
+      unreadByRoles: {
+        owner: true,
+        cat: false,
+      },
+    },
+  });
   assert.equal(submitted.events, undefined);
   assert.equal(submitted.hasEvents, undefined);
+  assert.equal(submitted.hasUnreadUpdate, true);
+  assert.equal(submitted.unreadLabel, "有新点餐");
   assert.deepEqual(submitted.primaryAction, {
     action: "accept",
     label: "主人收到啦",

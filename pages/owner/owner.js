@@ -83,6 +83,13 @@ Page({
       detail,
       hasActiveOrder: true,
     });
+
+    if (detail.hasUnreadUpdate && typeof api.markOrderRead === "function") {
+      await api.markOrderRead(orderId, ROLE.OWNER);
+      this.setData({
+        orders: clearUnreadOrder(this.data.orders, orderId),
+      });
+    }
   },
 
   async runPrimaryAction() {
@@ -131,4 +138,15 @@ function markActiveOrder(orders, activeOrderId) {
     ...order,
     isActive: order.id === activeOrderId,
   }));
+}
+
+function clearUnreadOrder(orders, orderId) {
+  return orders.map((order) => {
+    if (order.id !== orderId) return order;
+    return {
+      ...order,
+      hasUnreadUpdate: false,
+      unreadLabel: "",
+    };
+  });
 }

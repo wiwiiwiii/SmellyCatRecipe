@@ -179,6 +179,8 @@
 
 咪提交点餐。允许多道菜单菜和多个愿望菜。
 
+小程序端可以先在本地生成点菜单草稿；草稿不会调用该接口，也不会出现在主人端。咪点击“发送给主人”后才调用该接口创建正式订单。
+
 请求：
 
 ```json
@@ -203,6 +205,7 @@
 ```
 
 响应返回订单详情，初始状态为 `submitted`。
+订单创建后服务端将 `unreadByRoles.owner` 标记为 `true`，用于主人端显示新点餐提醒。
 
 #### `GET /orders`
 
@@ -215,9 +218,29 @@
 - `roleView=cat|owner`：前端当前展示视角，服务端仍以登录角色校验权限。
 - `cursor`、`limit`
 
+订单摘要包含当前登录角色视角下的 `hasUnreadUpdate`，用于列表页显示提醒标记。
+
 #### `GET /orders/{orderId}`
 
-查询订单详情，包含菜品、愿望菜、状态时间线、替换请求和通知日志摘要。
+查询订单详情，包含菜品、愿望菜、内部事件记录、替换请求、通知日志摘要和 `unreadByRoles`。
+
+#### `POST /orders/{orderId}/read`
+
+当前登录角色把该订单标记为已读。主人打开新点餐详情后清除主人侧提醒；咪打开主人更新后的订单详情后清除小猫侧提醒。
+
+响应：
+
+```json
+{
+  "order": {
+    "id": "ord_01H...",
+    "unreadByRoles": {
+      "cat": false,
+      "owner": false
+    }
+  }
+}
+```
 
 #### `POST /orders/{orderId}/repeat-draft`
 

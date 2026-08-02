@@ -93,6 +93,11 @@ function createMockApiClient({ now = () => new Date(), initialOrders = [] } = {}
         }),
       ],
       replacementRequests: [],
+      unreadByRoles: {
+        [ROLE.CAT]: false,
+        [ROLE.OWNER]: true,
+      },
+      lastActorRole: ROLE.CAT,
       notificationSummary: {
         hasWarning: false,
         latestWarning: null,
@@ -120,14 +125,36 @@ function createMockApiClient({ now = () => new Date(), initialOrders = [] } = {}
     });
 
     return {
-      orders: orders.map(toOrderSummary),
+      orders: orders.map((order) => toOrderSummary(order, state.currentUser)),
       nextCursor: null,
     };
   }
 
   async function getOrder(orderId) {
+    const order = findOrder(orderId);
+    ensureUnreadByRoles(order);
+
     return {
-      order: clone(findOrder(orderId)),
+      order: clone(order),
+    };
+  }
+
+  async function markOrderRead(orderId, role) {
+    if (!role && !state.currentUser) {
+      throw createError("AUTH_REQUIRED", "缺少或无效登录态");
+    }
+
+    const readerRole = role || state.currentUser.role;
+    if (![ROLE.CAT, ROLE.OWNER].includes(readerRole)) {
+      throw createError("INVALID_READER_ROLE", "已读角色无效", { role: readerRole });
+    }
+
+    const order = findOrder(orderId);
+    ensureUnreadByRoles(order);
+    order.unreadByRoles[readerRole] = false;
+
+    return {
+      order: clone(order),
     };
   }
 
@@ -191,6 +218,10 @@ function createMockApiClient({ now = () => new Date(), initialOrders = [] } = {}
 
     order.status = nextStatus;
     order.updatedAt = updatedAt;
+    order.lastActorRole = ROLE.OWNER;
+    ensureUnreadByRoles(order);
+    order.unreadByRoles[ROLE.CAT] = true;
+    order.unreadByRoles[ROLE.OWNER] = false;
     order.events.push(
       buildOrderEvent({
         type: eventType,
@@ -251,18 +282,22 @@ function createMockApiClient({ now = () => new Date(), initialOrders = [] } = {}
     listMenuItems,
     listNotificationLogs,
     listOrders,
+    markOrderRead,
     recordNotificationSubscriptions,
     startCooking,
     wechatLogin,
   };
 }
 
-function toOrderSummary(order) {
+function toOrderSummary(order, currentUser) {
+  ensureUnreadByRoles(order);
+
   return {
     id: order.id,
     mealTime: order.mealTime,
     mood: order.mood,
     status: order.status,
+    hasUnreadUpdate: Boolean(currentUser && order.unreadByRoles[currentUser.role]),
     itemNames: [
       ...order.items.map((item) => item.name),
       ...order.wishItems.map((item) => item.name),
@@ -270,6 +305,14 @@ function toOrderSummary(order) {
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
   };
+}
+
+function ensureUnreadByRoles(order) {
+  order.unreadByRoles = {
+    [ROLE.CAT]: Boolean(order.unreadByRoles && order.unreadByRoles[ROLE.CAT]),
+    [ROLE.OWNER]: Boolean(order.unreadByRoles && order.unreadByRoles[ROLE.OWNER]),
+  };
+  return order.unreadByRoles;
 }
 
 function createError(code, message, details = {}) {

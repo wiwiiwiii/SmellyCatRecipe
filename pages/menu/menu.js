@@ -3,10 +3,10 @@ const {
   buildMenuViewModel,
   createWishItemDraft,
 } = require("../../services/menu-view-model");
-const { getDevApiClient } = require("../../services/dev-api-client");
-const { hasLatestCatOrder } = require("../../services/cat-order-view-model");
-
-const api = getDevApiClient();
+const {
+  createCatOrderDraft,
+  hasLatestCatOrder,
+} = require("../../services/cat-order-view-model");
 
 Page({
   data: {
@@ -141,12 +141,7 @@ Page({
     }
 
     try {
-      await api.wechatLogin({
-        code: "dev-code",
-        devRoleOverride: "cat",
-      });
-
-      const response = await api.createOrder({
+      const draft = createCatOrderDraft({
         mealTime: this.data.mealTime,
         mood: this.data.mood,
         items: this.data.selectedItemIds.map((menuItemId) => ({
@@ -157,8 +152,7 @@ Page({
         note: this.data.note,
       });
 
-      wx.setStorageSync("latestOrderId", response.order.id);
-      wx.setStorageSync("latestOrder", response.order);
+      wx.setStorageSync("draftOrder", draft);
       wx.navigateTo({
         url: "/pages/order/order",
       });

@@ -2,9 +2,10 @@
   <block wx:if="{{hasOrder}}">
     <view class="status-card">
       <image class="status-logo" src="/static/img/logo.jpg" mode="aspectFill" />
-      <view class="status-label">点餐成功</view>
-      <view class="status-title">咪的小愿望已经交给主人啦</view>
-      <view class="status-subtitle">{{statusCopy}}</view>
+      <view wx:if="{{hasUnreadUpdate}}" class="unread-badge">{{unreadLabel}}</view>
+      <view class="status-label">{{statusLabel}}</view>
+      <view class="status-title">{{statusTitle}}</view>
+      <view class="status-subtitle">{{statusDetail || statusCopy}}</view>
     </view>
 
     <view class="section">
@@ -42,7 +43,8 @@
       <text>{{message}}</text>
     </view>
 
-    <button class="primary-button" bindtap="copyOrder">复制备用文案</button>
+    <button wx:if="{{canSend}}" class="primary-button" bindtap="sendOrderToOwner">发送给主人</button>
+    <button class="{{canSend ? 'ghost-button' : 'primary-button'}}" bindtap="copyOrder">复制备用文案</button>
     <button class="ghost-button" bindtap="backToMenu">继续加菜</button>
   </block>
 
