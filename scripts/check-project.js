@@ -39,6 +39,20 @@ function assertOpenApiShape() {
   }
 }
 
+function assertCiCacheHasLockfile() {
+  const workflowPath = path.join(".github", "workflows", "ci.yml");
+  assertFileExists(workflowPath);
+  const content = fs.readFileSync(workflowPath, "utf8");
+  const hasNpmCache = /^\s*cache:\s*npm\s*$/m.test(content);
+  const hasLockfile = ["package-lock.json", "npm-shrinkwrap.json", "yarn.lock"].some((filePath) =>
+    fs.existsSync(filePath),
+  );
+
+  if (hasNpmCache && !hasLockfile) {
+    throw new Error("CI workflow cannot enable setup-node npm cache without a dependency lockfile");
+  }
+}
+
 function main() {
   const appJson = readJson("app.json");
   const projectConfig = readJson("project.config.json");
@@ -46,6 +60,7 @@ function main() {
   assertPageFiles(appJson);
   assertPackIgnores(projectConfig);
   assertOpenApiShape();
+  assertCiCacheHasLockfile();
   console.log(`project check ok: ${appJson.pages.length} pages`);
 }
 
