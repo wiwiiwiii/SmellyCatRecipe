@@ -8,6 +8,7 @@ const {
 } = require("../../services/constants");
 const { getDevApiClient } = require("../../services/dev-api-client");
 const {
+  buildOwnerMenuEditScrollOptions,
   buildOwnerMenuItemInput,
   buildOwnerMenuView,
 } = require("../../services/owner-menu-view-model");
@@ -131,6 +132,20 @@ Page({
       formTitle: "改一下这道菜",
     });
     this.syncFormOptions(form);
+    this.scrollToForm();
+  },
+
+  scrollToForm() {
+    if (!wx.pageScrollTo) return;
+
+    const scroll = () => {
+      wx.pageScrollTo(buildOwnerMenuEditScrollOptions());
+    };
+    if (wx.nextTick) {
+      wx.nextTick(scroll);
+    } else {
+      scroll();
+    }
   },
 
   resetForm() {

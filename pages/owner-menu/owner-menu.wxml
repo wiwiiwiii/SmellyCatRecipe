@@ -7,7 +7,7 @@
     <button class="cat-link" bindtap="backOwner">回主人端</button>
   </view>
 
-  <view class="section">
+  <view id="owner-menu-form" class="section">
     <view class="section-head">
       <view>
         <view class="section-title">{{formTitle}}</view>
