@@ -35,4 +35,10 @@ git switch -c feature/name
 npm run check
 ```
 
-Open a PR from `feature/name` to `qa`. After `qa` is stable, open a PR from `qa` to `main`.
+Open a PR from `feature/name` or `fix/name` to `qa`. Keep new work based on `qa` unless a release is being prepared.
+
+## Release Flow
+
+Day-to-day work stays on `qa`. Do not promote `qa` to `main` after every completed feature or fix.
+
+Open a `qa` to `main` PR only when preparing a version update or production release. That release PR should include the version/change summary and must pass the same required `checks` status before merge.
