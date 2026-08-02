@@ -113,9 +113,9 @@
 
   <view class="submit-bar">
     <view>
-      <view class="submit-title">咪点好啦</view>
-      <view class="submit-note">{{totalSelectedCount}} 个小愿望，给主人看看</view>
+      <view class="submit-title">咪先看看这一单</view>
+      <view class="submit-note">{{totalSelectedCount}} 个小愿望，确认后再发给主人</view>
     </view>
-    <button class="submit-button" bindtap="submitOrder">生成点餐单</button>
+    <button class="submit-button" bindtap="submitOrder">生成点菜单</button>
   </view>
 </view>

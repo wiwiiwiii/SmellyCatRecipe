@@ -20,7 +20,10 @@
           <view class="order-title">{{item.mealTimeText}} · {{item.moodText}}</view>
           <view class="order-items">{{item.itemsText}}</view>
         </view>
-        <view class="order-status">{{item.statusText}}</view>
+        <view class="order-side">
+          <view wx:if="{{item.hasUnreadUpdate}}" class="unread-badge">{{item.unreadLabel}}</view>
+          <view class="order-status">{{item.statusText}}</view>
+        </view>
       </view>
       <view class="order-time">{{item.updatedAt}}</view>
     </view>
@@ -36,6 +39,7 @@
       <view>
         <view class="section-title">这单怎么安排</view>
         <view class="section-note">{{detail.statusText}}</view>
+        <view wx:if="{{detail.hasUnreadUpdate}}" class="detail-unread">{{detail.unreadLabel}}</view>
       </view>
       <view class="meal-pill">{{detail.mealTimeText}}</view>
     </view>

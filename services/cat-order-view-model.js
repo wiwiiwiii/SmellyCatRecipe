@@ -4,9 +4,18 @@ const {
   ORDER_STATUS,
   ROLE,
 } = require("./constants");
+const { MENU_ITEMS } = require("../data/menu");
 const { getStatusCopy } = require("./order-state");
 
 async function loadLatestCatOrder({ api, storage }) {
+  const draft = storage.getStorageSync("draftOrder");
+  if (isRenderableDraft(draft)) {
+    return {
+      order: draft.previewOrder,
+      source: "draft",
+    };
+  }
+
   const orderId = storage.getStorageSync("latestOrderId");
   const cachedOrder = storage.getStorageSync("latestOrder");
 
@@ -45,7 +54,79 @@ async function loadLatestCatOrder({ api, storage }) {
   };
 }
 
+function createCatOrderDraft(orderInput) {
+  const input = normalizeOrderInput(orderInput);
+  const previewOrder = {
+    id: "draft_order",
+    isDraft: true,
+    mealTime: input.mealTime,
+    mood: input.mood,
+    status: "draft",
+    items: input.items.map((item, index) => buildDraftOrderItem(item, index)),
+    wishItems: input.wishItems.map((item, index) => ({
+      id: `draft_wish_${index + 1}`,
+      name: item.name,
+      note: item.note || "",
+    })),
+    note: input.note,
+    notificationSummary: {
+      hasWarning: false,
+      latestWarning: null,
+    },
+    unreadByRoles: {
+      [ROLE.CAT]: false,
+      [ROLE.OWNER]: false,
+    },
+  };
+
+  return {
+    id: previewOrder.id,
+    input,
+    previewOrder,
+  };
+}
+
+async function sendCatOrderDraft({ api, storage }) {
+  const draft = storage.getStorageSync("draftOrder");
+  if (!isRenderableDraft(draft)) {
+    throw new Error("还没有可以发送的点餐单");
+  }
+
+  if (api && typeof api.wechatLogin === "function") {
+    await api.wechatLogin({
+      code: "dev-code",
+      devRoleOverride: ROLE.CAT,
+    });
+  }
+
+  const response = await api.createOrder(draft.input);
+  removeStorage(storage, "draftOrder");
+  storage.setStorageSync("latestOrderId", response.order.id);
+  storage.setStorageSync("latestOrder", response.order);
+
+  return response;
+}
+
 function buildCatOrderView(order) {
+  if (order.isDraft) {
+    return {
+      canSend: true,
+      hasNotificationWarning: false,
+      hasUnreadUpdate: false,
+      hasWishItems: Array.isArray(order.wishItems) && order.wishItems.length > 0,
+      isDraft: true,
+      mealTimeText: MEAL_TIME_LABELS[order.mealTime] || order.mealTime,
+      message: formatCatOrderMessage(order),
+      moodText: MOOD_LABELS[order.mood] || "",
+      order,
+      statusCopy: "点菜单先放这里，还没发给主人",
+      statusDetail: "确认没问题再发送，主人现在还看不到。",
+      statusLabel: "还没发送",
+      statusTitle: "咪先看看这份点菜单",
+      unreadLabel: "",
+    };
+  }
+
   const status = order.status || ORDER_STATUS.SUBMITTED;
   const normalizedOrder = {
     ...order,
@@ -53,31 +134,45 @@ function buildCatOrderView(order) {
   };
 
   return {
+    canSend: false,
     hasNotificationWarning: Boolean(order.notificationSummary && order.notificationSummary.hasWarning),
+    hasUnreadUpdate: Boolean(order.unreadByRoles && order.unreadByRoles[ROLE.CAT]),
     hasWishItems: Array.isArray(order.wishItems) && order.wishItems.length > 0,
+    isDraft: false,
     mealTimeText: MEAL_TIME_LABELS[order.mealTime] || order.mealTime,
     message: formatCatOrderMessage(normalizedOrder),
     moodText: MOOD_LABELS[order.mood] || "",
     order: normalizedOrder,
     statusCopy: getStatusCopy(status, ROLE.CAT),
+    statusDetail: getCatStatusDetail(status),
+    statusLabel: "当前状态",
+    statusTitle: getStatusCopy(status, ROLE.CAT),
+    unreadLabel: order.unreadByRoles && order.unreadByRoles[ROLE.CAT] ? "有新进展" : "",
   };
 }
 
 function buildEmptyCatOrderView() {
   return {
+    canSend: false,
     hasOrder: false,
     hasNotificationWarning: false,
+    hasUnreadUpdate: false,
     hasWishItems: false,
+    isDraft: false,
     mealTimeText: "",
     message: "",
     moodText: "",
     order: null,
+    statusDetail: "",
+    statusLabel: "",
     statusCopy: "",
+    statusTitle: "",
+    unreadLabel: "",
   };
 }
 
 function hasLatestCatOrder(storage) {
-  return Boolean(storage.getStorageSync("latestOrderId"));
+  return Boolean(storage.getStorageSync("draftOrder") || storage.getStorageSync("latestOrderId"));
 }
 
 function formatCatOrderMessage(order) {
@@ -102,9 +197,70 @@ function isRenderableOrder(order) {
   return Boolean(order && Array.isArray(order.items) && Array.isArray(order.wishItems) && order.status);
 }
 
+function isRenderableDraft(draft) {
+  return Boolean(draft && draft.input && isRenderableOrder(draft.previewOrder) && draft.previewOrder.isDraft);
+}
+
+function normalizeOrderInput(orderInput) {
+  return {
+    mealTime: orderInput.mealTime,
+    mood: orderInput.mood,
+    items: (orderInput.items || []).map((item) => ({
+      menuItemId: item.menuItemId,
+      quantity: item.quantity || 1,
+      note: item.note || "",
+    })),
+    wishItems: (orderInput.wishItems || []).map((item) => ({
+      name: item.name,
+      note: item.note || "",
+    })),
+    note: orderInput.note || "",
+  };
+}
+
+function buildDraftOrderItem(item, index) {
+  const menuItem = MENU_ITEMS.find((candidate) => candidate.id === item.menuItemId && !candidate.hidden);
+  if (!menuItem) {
+    throw new Error("菜品不存在或不可见");
+  }
+
+  return {
+    id: `draft_item_${index + 1}`,
+    menuItemId: menuItem.id,
+    name: menuItem.name,
+    quantity: item.quantity || 1,
+    note: item.note || "",
+    replacementForItemId: null,
+  };
+}
+
+function getCatStatusDetail(status) {
+  const details = {
+    [ORDER_STATUS.SUBMITTED]: "已经发给主人，等主人看一下。",
+    [ORDER_STATUS.ACCEPTED]: "主人接住了，咪可以等饭。",
+    [ORDER_STATUS.COOKING]: "主人开火啦，咪可以准备靠近厨房。",
+    [ORDER_STATUS.COMPLETED]: "主人说做好了，咪可以去吃。",
+    [ORDER_STATUS.CANCELLED]: "这单先不算啦，咪可以重新点。",
+    [ORDER_STATUS.REPLACEMENT_REQUESTED]: "主人想换一道，等咪确认。",
+  };
+
+  return details[status] || "";
+}
+
+function removeStorage(storage, key) {
+  if (typeof storage.removeStorageSync === "function") {
+    storage.removeStorageSync(key);
+    return;
+  }
+
+  storage.setStorageSync(key, undefined);
+}
+
 module.exports = {
   buildCatOrderView,
   buildEmptyCatOrderView,
+  createCatOrderDraft,
   hasLatestCatOrder,
   loadLatestCatOrder,
+  sendCatOrderDraft,
 };
