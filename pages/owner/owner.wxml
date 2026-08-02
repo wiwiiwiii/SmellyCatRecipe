@@ -1,0 +1,86 @@
+<view class="page safe-bottom">
+  <view class="hero">
+    <image class="hero-logo" src="/static/img/logo.jpg" mode="aspectFill" />
+    <view class="hero-kicker">主人端</view>
+    <view class="hero-title">{{heroTitle}}</view>
+    <view class="hero-subtitle">{{heroSubtitle}}</view>
+    <button class="cat-link" bindtap="goCatMenu">回小猫端</button>
+  </view>
+
+  <view wx:if="{{hasOrders}}" class="order-list">
+    <view
+      wx:for="{{orders}}"
+      wx:key="id"
+      class="order-card {{item.isActive ? 'order-card-active' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="selectOrder"
+    >
+      <view class="order-card-head">
+        <view>
+          <view class="order-title">{{item.mealTimeText}} · {{item.moodText}}</view>
+          <view class="order-items">{{item.itemsText}}</view>
+        </view>
+        <view class="order-status">{{item.statusText}}</view>
+      </view>
+      <view class="order-time">{{item.updatedAt}}</view>
+    </view>
+  </view>
+
+  <view wx:else class="empty-card">
+    <view class="empty-title">{{emptyTitle}}</view>
+    <view class="empty-note">{{emptyNote}}</view>
+  </view>
+
+  <view wx:if="{{hasActiveOrder}}" class="section">
+    <view class="section-head">
+      <view>
+        <view class="section-title">这单怎么安排</view>
+        <view class="section-note">{{detail.statusText}}</view>
+      </view>
+      <view class="meal-pill">{{detail.mealTimeText}}</view>
+    </view>
+
+    <view class="order-item" wx:for="{{detail.order.items}}" wx:key="id">
+      <view>
+        <view class="dish-name">{{item.name}}</view>
+        <view class="dish-desc">{{item.note || '咪想吃这个'}}</view>
+      </view>
+      <view class="dish-count">x{{item.quantity}}</view>
+    </view>
+
+    <view wx:if="{{detail.hasWishItems}}" class="wish-block">
+      <view class="wish-title">菜单外的小愿望</view>
+      <view class="order-item" wx:for="{{detail.order.wishItems}}" wx:key="id">
+        <view>
+          <view class="dish-name">{{item.name}}</view>
+          <view class="dish-desc">{{item.note || '想让主人看看这个'}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="note-box">
+      <view class="note-label">咪留的话</view>
+      <view class="note-text">{{detail.order.note || '没有额外备注'}}</view>
+    </view>
+
+    <button
+      wx:if="{{detail.canAct}}"
+      class="primary-button"
+      bindtap="runPrimaryAction"
+    >
+      {{detail.primaryAction.label}}
+    </button>
+    <view wx:else class="done-note">这单已经处理完了。</view>
+  </view>
+
+  <view wx:if="{{hasActiveOrder && detail.hasEvents}}" class="section">
+    <view class="section-title">订单时间线</view>
+    <view class="event-item" wx:for="{{detail.events}}" wx:key="id">
+      <view class="event-dot"></view>
+      <view>
+        <view class="event-type">{{item.type}}</view>
+        <view class="event-time">{{item.createdAt}}</view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,7 +1,8 @@
 {
   "pages": [
     "pages/menu/menu",
-    "pages/order/order"
+    "pages/order/order",
+    "pages/owner/owner"
   ],
   "window": {
     "navigationBarTitleText": "咪的喂食器",

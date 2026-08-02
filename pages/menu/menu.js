@@ -3,9 +3,9 @@ const {
   buildMenuViewModel,
   createWishItemDraft,
 } = require("../../services/menu-view-model");
-const { createMockApiClient } = require("../../services/mock-api-client");
+const { getDevApiClient } = require("../../services/dev-api-client");
 
-const api = createMockApiClient();
+const api = getDevApiClient();
 
 Page({
   data: {
@@ -160,6 +160,12 @@ Page({
         icon: "none",
       });
     }
+  },
+
+  goOwnerDev() {
+    wx.navigateTo({
+      url: "/pages/owner/owner",
+    });
   },
 
   refreshViewModel() {

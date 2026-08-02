@@ -49,6 +49,18 @@
   color: #c9aa8d;
 }
 
+.dev-owner-link {
+  position: relative;
+  width: 180rpx;
+  height: 58rpx;
+  line-height: 58rpx;
+  margin: 24rpx 0 0;
+  background: rgba(242, 166, 90, 0.14);
+  color: #ffd3a1;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
 .section {
   margin-top: 28rpx;
   padding: 28rpx;

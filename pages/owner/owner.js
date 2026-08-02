@@ -1,0 +1,134 @@
+const { ROLE } = require("../../services/constants");
+const { getDevApiClient } = require("../../services/dev-api-client");
+const {
+  buildOwnerOrderDetailView,
+  buildOwnerOrderListView,
+  resolveOwnerActiveOrderId,
+} = require("../../services/owner-view-model");
+
+const api = getDevApiClient();
+
+Page({
+  data: {
+    activeOrderId: "",
+    detail: null,
+    emptyNote: "",
+    emptyTitle: "",
+    hasActiveOrder: false,
+    hasOrders: false,
+    heroSubtitle: "",
+    heroTitle: "",
+    isLoading: false,
+    orders: [],
+  },
+
+  async onShow() {
+    await this.refreshOwnerOrders();
+  },
+
+  async refreshOwnerOrders() {
+    this.setData({ isLoading: true });
+
+    try {
+      await api.wechatLogin({
+        code: "dev-code",
+        devRoleOverride: ROLE.OWNER,
+      });
+
+      const response = await api.listOrders({ scope: "current" });
+      const listView = buildOwnerOrderListView({ orders: response.orders });
+      const activeOrderId = resolveOwnerActiveOrderId({
+        orders: listView.orders,
+        preferredOrderId: this.data.activeOrderId,
+      });
+
+      this.setData({
+        ...listView,
+        activeOrderId,
+        orders: markActiveOrder(listView.orders, activeOrderId),
+      });
+
+      if (activeOrderId) {
+        await this.loadOrderDetail(activeOrderId);
+      } else {
+        this.setData({
+          detail: null,
+          hasActiveOrder: false,
+        });
+      }
+    } catch (error) {
+      wx.showToast({
+        title: error.message,
+        icon: "none",
+      });
+    } finally {
+      this.setData({ isLoading: false });
+    }
+  },
+
+  async selectOrder(event) {
+    const orderId = event.currentTarget.dataset.id;
+    this.setData({
+      activeOrderId: orderId,
+      orders: markActiveOrder(this.data.orders, orderId),
+    });
+    await this.loadOrderDetail(orderId);
+  },
+
+  async loadOrderDetail(orderId) {
+    const response = await api.getOrder(orderId);
+    const detail = buildOwnerOrderDetailView({ order: response.order });
+
+    this.setData({
+      detail,
+      hasActiveOrder: true,
+    });
+  },
+
+  async runPrimaryAction() {
+    if (!this.data.detail || !this.data.detail.primaryAction) {
+      wx.showToast({
+        title: "这单暂时不用操作",
+        icon: "none",
+      });
+      return;
+    }
+
+    const orderId = this.data.detail.order.id;
+    const { action } = this.data.detail.primaryAction;
+
+    try {
+      if (action === "accept") {
+        await api.acceptOrder(orderId);
+      } else if (action === "start_cooking") {
+        await api.startCooking(orderId);
+      } else if (action === "complete") {
+        await api.completeOrder(orderId);
+      }
+
+      wx.showToast({
+        title: "主人处理好了",
+        icon: "success",
+      });
+      await this.refreshOwnerOrders();
+    } catch (error) {
+      wx.showToast({
+        title: error.message,
+        icon: "none",
+      });
+    }
+  },
+
+  goCatMenu() {
+    wx.navigateBack({
+      delta: 1,
+    });
+  },
+});
+
+function markActiveOrder(orders, activeOrderId) {
+  return orders.map((order) => ({
+    ...order,
+    isActive: order.id === activeOrderId,
+  }));
+}
