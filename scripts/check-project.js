@@ -53,12 +53,22 @@ function assertCiCacheHasLockfile() {
   }
 }
 
+function assertUnusedFileFilteringDisabled(projectConfig) {
+  const setting = projectConfig.setting || {};
+  for (const key of ["ignoreDevUnusedFiles", "ignoreUploadUnusedFiles"]) {
+    if (setting[key] !== false) {
+      throw new Error(`project.config.json setting.${key} must be false for WeChat DevTools page loading`);
+    }
+  }
+}
+
 function main() {
   const appJson = readJson("app.json");
   const projectConfig = readJson("project.config.json");
   readJson("sitemap.json");
   assertPageFiles(appJson);
   assertPackIgnores(projectConfig);
+  assertUnusedFileFilteringDisabled(projectConfig);
   assertOpenApiShape();
   assertCiCacheHasLockfile();
   console.log(`project check ok: ${appJson.pages.length} pages`);
