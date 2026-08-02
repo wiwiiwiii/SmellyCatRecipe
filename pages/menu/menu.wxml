@@ -4,6 +4,7 @@
     <view class="hero-kicker">咪的喂食器</view>
     <view class="hero-title">{{heroTitle || '咪今天想吃什么？'}}</view>
     <view class="hero-subtitle">{{heroSubtitle}}</view>
+    <button class="dev-owner-link" bindtap="goOwnerDev">主人端测试</button>
   </view>
 
   <view class="section">

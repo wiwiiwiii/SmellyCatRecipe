@@ -28,9 +28,12 @@ Protect both `main` and `qa`:
 
 ## Normal Flow
 
+Always sync with GitHub before creating any development branch:
+
 ```bash
 git switch qa
-git pull
+git fetch --prune origin
+git pull --ff-only origin qa
 git switch -c feature/name
 npm run check
 ```
