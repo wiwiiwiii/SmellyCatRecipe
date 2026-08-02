@@ -29,6 +29,40 @@ test("search returns visible menu matches and hides hidden dishes", () => {
   assert.ok(results.every((item) => item.hidden === false));
 });
 
+test("home model can use dynamic menu items from api", () => {
+  const viewModel = buildMenuViewModel({
+    mealTime: "dinner",
+    mood: "tired",
+    selectedItemIds: [],
+    menuItems: [
+      {
+        id: "scallion-noodle",
+        name: "葱油拌面",
+        description: "香香的葱油和热面条。",
+        catReason: "咪想吃简单但很香的一碗。",
+        tags: ["快手", "面"],
+        recommendedMealTimes: ["dinner"],
+        recommendedMoods: ["tired"],
+        estimatedMinutes: 12,
+        hidden: false,
+      },
+      {
+        id: "hidden-toast",
+        name: "隐藏吐司",
+        description: "暂时不做。",
+        catReason: "暂时不做。",
+        tags: ["隐藏"],
+        recommendedMealTimes: ["dinner"],
+        recommendedMoods: ["tired"],
+        estimatedMinutes: 10,
+        hidden: true,
+      },
+    ],
+  });
+
+  assert.deepEqual(viewModel.recommendedItems.map((item) => item.name), ["葱油拌面"]);
+});
+
 test("empty search can become a wish item draft", () => {
   const results = searchMenuItems({ query: "咖喱猪排饭" });
   const draft = createWishItemDraft({

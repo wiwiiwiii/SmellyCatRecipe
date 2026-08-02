@@ -1,0 +1,96 @@
+<view class="page safe-bottom">
+  <view class="hero">
+    <image class="hero-logo" src="/static/img/logo.jpg" mode="aspectFill" />
+    <view class="hero-kicker">菜单维护</view>
+    <view class="hero-title">{{heroTitle || '主人来整理菜单'}}</view>
+    <view class="hero-subtitle">{{heroSubtitle || '把常做的、暂时不做的，都放清楚。'}}</view>
+    <button class="cat-link" bindtap="backOwner">回主人端</button>
+  </view>
+
+  <view class="section">
+    <view class="section-head">
+      <view>
+        <view class="section-title">{{formTitle}}</view>
+        <view class="section-note">小猫端只会看到没藏起来的菜。</view>
+      </view>
+      <button wx:if="{{editingItemId}}" class="small-button" bindtap="resetForm">取消编辑</button>
+    </view>
+
+    <input class="text-input" placeholder="菜名" value="{{form.name}}" data-field="name" bindinput="onFormInput" />
+    <textarea class="textarea-input" placeholder="给主人自己的描述" value="{{form.description}}" data-field="description" bindinput="onFormInput" />
+    <textarea class="textarea-input" placeholder="咪看到的理由，比如：热热的，今天会很安心" value="{{form.catReason}}" data-field="catReason" bindinput="onFormInput" />
+    <input class="text-input" placeholder="标签，用逗号分开" value="{{form.tagsText}}" data-field="tagsText" bindinput="onFormInput" />
+    <input class="text-input" type="number" placeholder="预计分钟" value="{{form.estimatedMinutes}}" data-field="estimatedMinutes" bindinput="onFormInput" />
+
+    <view class="field-label">分类</view>
+    <view class="chip-grid">
+      <button
+        wx:for="{{categories}}"
+        wx:key="value"
+        class="chip {{item.selected ? 'chip-active' : ''}}"
+        data-value="{{item.value}}"
+        bindtap="selectCategory"
+      >
+        {{item.label}}
+      </button>
+    </view>
+
+    <view class="field-label">适合哪一顿</view>
+    <view class="chip-grid">
+      <button
+        wx:for="{{mealTimes}}"
+        wx:key="value"
+        class="chip {{item.selected ? 'chip-active' : ''}}"
+        data-value="{{item.value}}"
+        bindtap="toggleMealTime"
+      >
+        {{item.label}}
+      </button>
+    </view>
+
+    <view class="field-label">适合咪什么状态</view>
+    <view class="chip-grid">
+      <button
+        wx:for="{{moods}}"
+        wx:key="value"
+        class="chip mood-chip {{item.selected ? 'chip-active' : ''}}"
+        data-value="{{item.value}}"
+        bindtap="toggleMood"
+      >
+        {{item.label}}
+      </button>
+    </view>
+
+    <button class="ghost-button" bindtap="toggleFormHidden">{{form.hidden ? '先恢复显示' : '先藏起来'}}</button>
+    <button class="primary-button" bindtap="saveMenuItem">{{editingItemId ? '保存这道菜' : '加入菜单'}}</button>
+  </view>
+
+  <view wx:if="{{hasItems}}" class="menu-list">
+    <view
+      wx:for="{{items}}"
+      wx:key="id"
+      class="menu-card {{item.hidden ? 'menu-card-hidden' : ''}}"
+    >
+      <view class="menu-head">
+        <view>
+          <view class="menu-title">{{item.name}}</view>
+          <view class="menu-meta">{{item.categoryText}} · {{item.estimatedMinutes}} 分钟</view>
+        </view>
+        <view class="visibility-pill">{{item.visibilityText}}</view>
+      </view>
+      <view class="menu-desc">{{item.description}}</view>
+      <view class="menu-reason">{{item.catReason}}</view>
+      <view class="menu-meta">{{item.mealTimesText}} · {{item.moodsText}}</view>
+      <view class="menu-tags">{{item.tagsText}}</view>
+      <view class="menu-actions">
+        <button class="small-button" data-id="{{item.id}}" bindtap="editMenuItem">编辑</button>
+        <button class="small-button" data-id="{{item.id}}" bindtap="toggleMenuVisibility">{{item.visibilityActionLabel}}</button>
+      </view>
+    </view>
+  </view>
+
+  <view wx:else class="empty-card">
+    <view class="empty-title">{{emptyTitle}}</view>
+    <view class="empty-note">{{emptyNote}}</view>
+  </view>
+</view>

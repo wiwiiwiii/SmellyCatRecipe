@@ -3,6 +3,7 @@
     "pages/menu/menu",
     "pages/order/order",
     "pages/history/history",
+    "pages/owner-menu/owner-menu",
     "pages/owner/owner"
   ],
   "window": {

@@ -1,4 +1,5 @@
 const { MEAL_TIME, MOOD } = require("../../services/constants");
+const { getDevApiClient } = require("../../services/dev-api-client");
 const {
   buildMenuViewModel,
   createWishItemDraft,
@@ -7,6 +8,8 @@ const {
   createCatOrderDraft,
   hasLatestCatOrder,
 } = require("../../services/cat-order-view-model");
+
+const api = getDevApiClient();
 
 Page({
   data: {
@@ -17,6 +20,7 @@ Page({
     mealTimes: [],
     mood: MOOD.TIRED,
     moods: [],
+    menuItems: [],
     note: "",
     query: "",
     recommendedItems: [],
@@ -35,7 +39,7 @@ Page({
   onShow() {
     this.setData({
       hasLatestOrder: hasLatestCatOrder(wx),
-    });
+    }, () => this.refreshViewModel());
   },
 
   selectMealTime(event) {
@@ -182,23 +186,33 @@ Page({
     });
   },
 
-  refreshViewModel() {
-    const viewModel = buildMenuViewModel({
-      mealTime: this.data.mealTime,
-      mood: this.data.mood,
-      query: this.data.query,
-      selectedItemIds: this.data.selectedItemIds,
-    });
+  async refreshViewModel() {
+    try {
+      const response = await api.listMenuItems({});
+      const viewModel = buildMenuViewModel({
+        mealTime: this.data.mealTime,
+        mood: this.data.mood,
+        query: this.data.query,
+        selectedItemIds: this.data.selectedItemIds,
+        menuItems: response.items,
+      });
 
-    this.setData({
-      heroSubtitle: viewModel.heroSubtitle,
-      heroTitle: viewModel.heroTitle,
-      mealTimes: viewModel.mealTimes,
-      moods: viewModel.moods,
-      recommendedItems: viewModel.recommendedItems,
-      selectedCount: viewModel.selectedCount,
-      showWishPrompt: viewModel.showWishPrompt,
-      totalSelectedCount: viewModel.selectedCount + this.data.wishItems.length,
-    });
+      this.setData({
+        heroSubtitle: viewModel.heroSubtitle,
+        heroTitle: viewModel.heroTitle,
+        mealTimes: viewModel.mealTimes,
+        menuItems: response.items,
+        moods: viewModel.moods,
+        recommendedItems: viewModel.recommendedItems,
+        selectedCount: viewModel.selectedCount,
+        showWishPrompt: viewModel.showWishPrompt,
+        totalSelectedCount: viewModel.selectedCount + this.data.wishItems.length,
+      });
+    } catch (error) {
+      wx.showToast({
+        title: error.message,
+        icon: "none",
+      });
+    }
   },
 });

@@ -67,6 +67,18 @@
   font-weight: 700;
 }
 
+.hero-actions {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+  margin-top: 24rpx;
+}
+
+.hero-actions .cat-link {
+  margin-top: 0;
+}
+
 .order-list {
   margin-top: 28rpx;
 }
