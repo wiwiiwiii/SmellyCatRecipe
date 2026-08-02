@@ -4,6 +4,7 @@ const {
   createWishItemDraft,
 } = require("../../services/menu-view-model");
 const { getDevApiClient } = require("../../services/dev-api-client");
+const { hasLatestCatOrder } = require("../../services/cat-order-view-model");
 
 const api = getDevApiClient();
 
@@ -11,6 +12,7 @@ Page({
   data: {
     heroSubtitle: "",
     heroTitle: "",
+    hasLatestOrder: false,
     mealTime: MEAL_TIME.DINNER,
     mealTimes: [],
     mood: MOOD.TIRED,
@@ -28,6 +30,12 @@ Page({
 
   onLoad() {
     this.refreshViewModel();
+  },
+
+  onShow() {
+    this.setData({
+      hasLatestOrder: hasLatestCatOrder(wx),
+    });
   },
 
   selectMealTime(event) {
@@ -165,6 +173,12 @@ Page({
   goOwnerDev() {
     wx.navigateTo({
       url: "/pages/owner/owner",
+    });
+  },
+
+  goLatestOrder() {
+    wx.navigateTo({
+      url: "/pages/order/order",
     });
   },
 

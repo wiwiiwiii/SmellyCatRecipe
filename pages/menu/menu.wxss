@@ -49,16 +49,29 @@
   color: #c9aa8d;
 }
 
-.dev-owner-link {
+.hero-actions {
   position: relative;
-  width: 180rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+  margin-top: 24rpx;
+}
+
+.hero-action {
+  position: relative;
+  width: 210rpx;
   height: 58rpx;
   line-height: 58rpx;
-  margin: 24rpx 0 0;
+  margin: 0;
   background: rgba(242, 166, 90, 0.14);
   color: #ffd3a1;
   font-size: 24rpx;
   font-weight: 700;
+}
+
+.hero-action-primary {
+  background: #f2a65a;
+  color: #17110e;
 }
 
 .section {
