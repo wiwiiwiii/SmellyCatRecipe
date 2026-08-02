@@ -83,3 +83,29 @@ test("mock repeat draft returns editable order input", async () => {
   assert.equal(draft.items[0].menuItemId, "tomato-egg-rice");
   assert.equal(draft.note, "少一点米饭");
 });
+
+test("mock history lists completed orders for cat repeat flow", async () => {
+  const api = createMockApiClient();
+  await api.wechatLogin({ code: "dev-code", devRoleOverride: ROLE.CAT });
+  const created = await api.createOrder({
+    mealTime: "dinner",
+    mood: "tired",
+    items: [{ menuItemId: "tomato-egg-rice", quantity: 1 }],
+    wishItems: [],
+    note: "少一点米饭",
+  });
+
+  await api.wechatLogin({ code: "dev-code", devRoleOverride: ROLE.OWNER });
+  await api.acceptOrder(created.order.id);
+  await api.startCooking(created.order.id);
+  await api.completeOrder(created.order.id);
+
+  await api.wechatLogin({ code: "dev-code", devRoleOverride: ROLE.CAT });
+  const current = await api.listOrders({ scope: "current" });
+  const history = await api.listOrders({ scope: "history" });
+
+  assert.equal(current.orders.length, 0);
+  assert.equal(history.orders.length, 1);
+  assert.equal(history.orders[0].id, created.order.id);
+  assert.equal(history.orders[0].status, "completed");
+});

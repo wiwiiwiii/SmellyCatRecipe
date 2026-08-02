@@ -1,0 +1,144 @@
+.page {
+  min-height: 100vh;
+  padding: 28rpx;
+  background: radial-gradient(circle at 12% 0%, rgba(242, 166, 90, 0.18), transparent 34%), #17110e;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: 36rpx 32rpx;
+  border-radius: 32rpx;
+  background: linear-gradient(135deg, #30231c 0%, #17110e 100%);
+  border: 1rpx solid rgba(242, 166, 90, 0.24);
+  box-shadow: 0 18rpx 48rpx rgba(0, 0, 0, 0.24);
+}
+
+.hero-logo {
+  position: absolute;
+  right: -34rpx;
+  top: -48rpx;
+  width: 220rpx;
+  height: 220rpx;
+  opacity: 0.16;
+  border-radius: 44rpx;
+}
+
+.hero-kicker {
+  position: relative;
+  color: #f2a65a;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.hero-title {
+  position: relative;
+  margin-top: 12rpx;
+  max-width: 520rpx;
+  color: #f8ead8;
+  font-size: 46rpx;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.hero-subtitle {
+  position: relative;
+  margin-top: 12rpx;
+  color: #c9aa8d;
+  font-size: 27rpx;
+  line-height: 1.45;
+}
+
+.cat-link {
+  position: relative;
+  width: 180rpx;
+  height: 58rpx;
+  line-height: 58rpx;
+  margin: 24rpx 0 0;
+  background: rgba(242, 166, 90, 0.14);
+  color: #ffd3a1;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.history-list {
+  margin-top: 28rpx;
+}
+
+.history-card,
+.empty-card {
+  border-radius: 28rpx;
+  background: #241b16;
+  border: 1rpx solid rgba(242, 166, 90, 0.18);
+  box-shadow: 0 10rpx 36rpx rgba(0, 0, 0, 0.16);
+}
+
+.history-card {
+  padding: 24rpx;
+  margin-bottom: 18rpx;
+}
+
+.history-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.history-title {
+  color: #f8ead8;
+  font-size: 30rpx;
+  font-weight: 750;
+}
+
+.history-items {
+  margin-top: 8rpx;
+  color: #c9aa8d;
+  font-size: 25rpx;
+  line-height: 1.45;
+}
+
+.status-pill {
+  flex: none;
+  max-width: 220rpx;
+  color: #f2a65a;
+  font-size: 23rpx;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.history-time {
+  margin-top: 16rpx;
+  color: #c9aa8d;
+  font-size: 21rpx;
+}
+
+.repeat-button,
+.primary-button {
+  height: 76rpx;
+  line-height: 76rpx;
+  margin-top: 22rpx;
+  background: #f2a65a;
+  color: #17110e;
+  font-size: 27rpx;
+  font-weight: 800;
+}
+
+.empty-card {
+  margin-top: 28rpx;
+  padding: 42rpx 32rpx;
+  text-align: center;
+}
+
+.empty-title {
+  color: #f8ead8;
+  font-size: 34rpx;
+  font-weight: 800;
+}
+
+.empty-note {
+  margin-top: 16rpx;
+  color: #c9aa8d;
+  font-size: 26rpx;
+  line-height: 1.45;
+}
