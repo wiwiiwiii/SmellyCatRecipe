@@ -4,6 +4,9 @@ const {
   MOOD_LABELS,
 } = require("./constants");
 
+const OWNER_MENU_FORM_SELECTOR = "#owner-menu-form";
+const OWNER_MENU_EDIT_SCROLL_DURATION = 280;
+
 function buildOwnerMenuView({ items = [] }) {
   const decoratedItems = items.map((item) => ({
     ...item,
@@ -39,6 +42,13 @@ function buildOwnerMenuItemInput(form) {
   };
 }
 
+function buildOwnerMenuEditScrollOptions() {
+  return {
+    selector: OWNER_MENU_FORM_SELECTOR,
+    duration: OWNER_MENU_EDIT_SCROLL_DURATION,
+  };
+}
+
 function getCategoryText(categoryId) {
   const category = CATEGORIES.find((item) => item.id === categoryId);
   return category ? category.name : categoryId;
@@ -52,6 +62,7 @@ function parseTags(tagsText = "") {
 }
 
 module.exports = {
+  buildOwnerMenuEditScrollOptions,
   buildOwnerMenuItemInput,
   buildOwnerMenuView,
 };

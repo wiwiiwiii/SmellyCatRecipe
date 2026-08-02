@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
+  buildOwnerMenuEditScrollOptions,
   buildOwnerMenuItemInput,
   buildOwnerMenuView,
 } = require("../services/owner-menu-view-model");
@@ -68,5 +69,12 @@ test("owner menu form input trims text and parses tags and minutes", () => {
     recommendedMoods: ["hungry", "tired"],
     estimatedMinutes: 12,
     hidden: false,
+  });
+});
+
+test("owner menu edit action scrolls back to the form section", () => {
+  assert.deepEqual(buildOwnerMenuEditScrollOptions(), {
+    selector: "#owner-menu-form",
+    duration: 280,
   });
 });
