@@ -131,6 +131,12 @@ Page({
       delta: 1,
     });
   },
+
+  goOwnerMenu() {
+    wx.navigateTo({
+      url: "/pages/owner-menu/owner-menu",
+    });
+  },
 });
 
 function markActiveOrder(orders, activeOrderId) {

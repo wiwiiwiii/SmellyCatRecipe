@@ -48,6 +48,10 @@ function createMockApiClient({ now = () => new Date(), initialOrders = [] } = {}
   }
 
   async function listMenuItems({ mealTime, mood, q = "", includeHidden = false } = {}) {
+    if (includeHidden) {
+      requireRole(ROLE.OWNER);
+    }
+
     const normalized = q.trim().toLowerCase();
     const items = state.menuItems.filter((item) => {
       if (item.hidden && !includeHidden) return false;
@@ -63,6 +67,36 @@ function createMockApiClient({ now = () => new Date(), initialOrders = [] } = {}
     return {
       items: clone(items),
       nextCursor: null,
+    };
+  }
+
+  async function createMenuItem(menuItemInput) {
+    requireRole(ROLE.OWNER);
+
+    const nowValue = currentNow().toISOString();
+    const item = buildMenuItem({
+      ...menuItemInput,
+      id: nextId("menu"),
+      createdAt: nowValue,
+      updatedAt: nowValue,
+    });
+
+    state.menuItems.unshift(item);
+
+    return {
+      item: clone(item),
+    };
+  }
+
+  async function updateMenuItem(menuItemId, patch) {
+    requireRole(ROLE.OWNER);
+
+    const item = findMenuItem(menuItemId);
+    Object.assign(item, normalizeMenuPatch(patch));
+    item.updatedAt = currentNow().toISOString();
+
+    return {
+      item: clone(item),
     };
   }
 
@@ -261,6 +295,14 @@ function createMockApiClient({ now = () => new Date(), initialOrders = [] } = {}
     return order;
   }
 
+  function findMenuItem(menuItemId) {
+    const item = state.menuItems.find((candidate) => candidate.id === menuItemId);
+    if (!item) {
+      throw createError("MENU_ITEM_NOT_FOUND", "菜品不存在或不可见", { menuItemId });
+    }
+    return item;
+  }
+
   function requireRole(role) {
     if (!state.currentUser) {
       throw createError("AUTH_REQUIRED", "缺少或无效登录态");
@@ -276,6 +318,7 @@ function createMockApiClient({ now = () => new Date(), initialOrders = [] } = {}
   return {
     acceptOrder,
     completeOrder,
+    createMenuItem,
     createOrder,
     createRepeatDraft,
     getOrder,
@@ -285,8 +328,62 @@ function createMockApiClient({ now = () => new Date(), initialOrders = [] } = {}
     markOrderRead,
     recordNotificationSubscriptions,
     startCooking,
+    updateMenuItem,
     wechatLogin,
   };
+}
+
+function buildMenuItem(input) {
+  const category = input.category || input.categoryId || "main";
+
+  return {
+    id: input.id,
+    categoryId: category,
+    category,
+    name: input.name,
+    description: input.description,
+    catReason: input.catReason,
+    tags: input.tags || [],
+    recommendedMealTimes: input.recommendedMealTimes || [],
+    recommendedMoods: input.recommendedMoods || [],
+    estimatedMinutes: Number(input.estimatedMinutes || input.cookingMinutes || 0),
+    cookingMinutes: Number(input.cookingMinutes || input.estimatedMinutes || 0),
+    hidden: Boolean(input.hidden),
+    createdAt: input.createdAt,
+    updatedAt: input.updatedAt,
+  };
+}
+
+function normalizeMenuPatch(patch) {
+  const normalized = {};
+  for (const key of [
+    "name",
+    "description",
+    "catReason",
+    "tags",
+    "recommendedMealTimes",
+    "recommendedMoods",
+    "hidden",
+  ]) {
+    if (Object.prototype.hasOwnProperty.call(patch, key)) {
+      normalized[key] = patch[key];
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(patch, "category")) {
+    normalized.category = patch.category;
+    normalized.categoryId = patch.category;
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, "categoryId")) {
+    normalized.categoryId = patch.categoryId;
+    normalized.category = patch.categoryId;
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, "estimatedMinutes")) {
+    normalized.estimatedMinutes = Number(patch.estimatedMinutes);
+    normalized.cookingMinutes = Number(patch.estimatedMinutes);
+  }
+
+  return normalized;
 }
 
 function toOrderSummary(order, currentUser) {

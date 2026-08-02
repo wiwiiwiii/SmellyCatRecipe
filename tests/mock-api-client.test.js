@@ -109,3 +109,75 @@ test("mock history lists completed orders for cat repeat flow", async () => {
   assert.equal(history.orders[0].id, created.order.id);
   assert.equal(history.orders[0].status, "completed");
 });
+
+test("owner can create menu items that cat can later see", async () => {
+  const api = createMockApiClient();
+  await api.wechatLogin({ code: "dev-code", devRoleOverride: ROLE.OWNER });
+
+  const created = await api.createMenuItem({
+    name: "葱油拌面",
+    description: "香香的葱油和热面条。",
+    catReason: "咪想吃简单但很香的一碗。",
+    category: "main",
+    tags: ["快手", "面"],
+    recommendedMealTimes: ["lunch", "dinner"],
+    recommendedMoods: ["hungry", "tired"],
+    estimatedMinutes: 12,
+    hidden: false,
+  });
+
+  await api.wechatLogin({ code: "dev-code", devRoleOverride: ROLE.CAT });
+  const catMenu = await api.listMenuItems({ q: "葱油" });
+
+  assert.equal(created.item.name, "葱油拌面");
+  assert.equal(created.item.hidden, false);
+  assert.equal(catMenu.items.length, 1);
+  assert.equal(catMenu.items[0].id, created.item.id);
+});
+
+test("owner can hide and restore a menu item from cat menu", async () => {
+  const api = createMockApiClient();
+  await api.wechatLogin({ code: "dev-code", devRoleOverride: ROLE.OWNER });
+
+  const hidden = await api.updateMenuItem("tomato-egg-rice", { hidden: true });
+  const ownerMenu = await api.listMenuItems({ includeHidden: true, q: "番茄" });
+
+  await api.wechatLogin({ code: "dev-code", devRoleOverride: ROLE.CAT });
+  const hiddenCatMenu = await api.listMenuItems({ q: "番茄" });
+
+  await api.wechatLogin({ code: "dev-code", devRoleOverride: ROLE.OWNER });
+  const restored = await api.updateMenuItem("tomato-egg-rice", { hidden: false });
+
+  await api.wechatLogin({ code: "dev-code", devRoleOverride: ROLE.CAT });
+  const restoredCatMenu = await api.listMenuItems({ q: "番茄" });
+
+  assert.equal(hidden.item.hidden, true);
+  assert.equal(ownerMenu.items[0].hidden, true);
+  assert.equal(hiddenCatMenu.items.length, 0);
+  assert.equal(restored.item.hidden, false);
+  assert.equal(restoredCatMenu.items.length, 1);
+});
+
+test("cat cannot create or edit menu items", async () => {
+  const api = createMockApiClient();
+  await api.wechatLogin({ code: "dev-code", devRoleOverride: ROLE.CAT });
+
+  await assert.rejects(
+    () => api.createMenuItem({
+      name: "偷偷加菜",
+      description: "不该成功",
+      catReason: "不该成功",
+      category: "main",
+      tags: [],
+      recommendedMealTimes: ["dinner"],
+      recommendedMoods: ["tired"],
+      estimatedMinutes: 10,
+      hidden: false,
+    }),
+    /当前角色不能执行操作/,
+  );
+  await assert.rejects(
+    () => api.updateMenuItem("tomato-egg-rice", { hidden: true }),
+    /当前角色不能执行操作/,
+  );
+});

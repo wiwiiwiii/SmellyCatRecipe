@@ -4,9 +4,9 @@ const { MEAL_TIME, MEAL_TIME_LABELS, MOOD, MOOD_LABELS } = require("./constants"
 const MEAL_TIMES = [MEAL_TIME.LUNCH, MEAL_TIME.DINNER, MEAL_TIME.LATE_NIGHT];
 const MOODS = [MOOD.HUNGRY, MOOD.HOT, MOOD.MEAT, MOOD.SWEET, MOOD.TIRED, MOOD.OWNER_PICK];
 
-function buildMenuViewModel({ mealTime, mood, selectedItemIds = [], query = "" }) {
+function buildMenuViewModel({ mealTime, mood, selectedItemIds = [], query = "", menuItems = MENU_ITEMS }) {
   const selected = new Set(selectedItemIds);
-  const recommendedItems = filterVisibleItems(query)
+  const recommendedItems = filterVisibleItems(query, menuItems)
     .filter((item) => {
       return item.recommendedMealTimes.includes(mealTime) || item.recommendedMoods.includes(mood);
     })
@@ -19,7 +19,7 @@ function buildMenuViewModel({ mealTime, mood, selectedItemIds = [], query = "" }
     moods: MOODS.map((value) => ({ value, label: MOOD_LABELS[value], selected: value === mood })),
     recommendedItems,
     selectedCount: selectedItemIds.length,
-    showWishPrompt: query.trim().length > 0 && searchMenuItems({ query }).length === 0,
+    showWishPrompt: query.trim().length > 0 && searchMenuItems({ query, menuItems }).length === 0,
   };
 }
 

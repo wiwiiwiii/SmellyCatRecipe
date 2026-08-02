@@ -4,7 +4,10 @@
     <view class="hero-kicker">主人端</view>
     <view class="hero-title">{{heroTitle}}</view>
     <view class="hero-subtitle">{{heroSubtitle}}</view>
-    <button class="cat-link" bindtap="goCatMenu">回小猫端</button>
+    <view class="hero-actions">
+      <button class="cat-link" bindtap="goOwnerMenu">菜单维护</button>
+      <button class="cat-link" bindtap="goCatMenu">回小猫端</button>
+    </view>
   </view>
 
   <view wx:if="{{hasOrders}}" class="order-list">
