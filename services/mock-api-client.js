@@ -222,6 +222,125 @@ function createMockApiClient({ now = () => new Date(), initialOrders = [] } = {}
     return transitionOrder(orderId, "complete", "completed");
   }
 
+  async function requestReplacement(orderId, input) {
+    requireRole(ROLE.OWNER);
+
+    const order = findOrder(orderId);
+    const replacements = input && Array.isArray(input.replacements) ? input.replacements : [];
+    if (!replacements.length) {
+      throw createError("INVALID_REPLACEMENT_REQUEST", "至少要写一道想替换的菜");
+    }
+
+    const nextStatus = getNextOrderStatus({
+      currentStatus: order.status,
+      action: "request_replacement",
+      actorRole: ROLE.OWNER,
+    });
+    const updatedAt = currentNow().toISOString();
+    const request = {
+      id: nextId("rr"),
+      status: "pending",
+      replacements: replacements.map((replacement) => buildReplacementInput(order, replacement)),
+      catNote: "",
+      createdAt: updatedAt,
+      decidedAt: null,
+    };
+
+    order.replacementRequests.push(request);
+    order.status = nextStatus;
+    order.updatedAt = updatedAt;
+    order.lastActorRole = ROLE.OWNER;
+    ensureUnreadByRoles(order);
+    order.unreadByRoles[ROLE.CAT] = true;
+    order.unreadByRoles[ROLE.OWNER] = false;
+    order.events.push(
+      buildOrderEvent({
+        type: "replacement_requested",
+        actorRole: ROLE.OWNER,
+        note: request.replacements.map((replacement) => replacement.reason).join("；"),
+        now: new Date(updatedAt),
+      })
+    );
+
+    return {
+      order: clone(order),
+    };
+  }
+
+  async function confirmReplacement(orderId, replacementRequestId, input = {}) {
+    requireRole(ROLE.CAT);
+
+    const order = findOrder(orderId);
+    const request = findReplacementRequest(order, replacementRequestId);
+    assertPendingReplacement(request);
+    const updatedAt = currentNow().toISOString();
+    const nextStatus = getNextOrderStatus({
+      currentStatus: order.status,
+      action: "confirm_replacement",
+      actorRole: ROLE.CAT,
+      hasPendingReplacement: true,
+    });
+
+    for (const replacement of request.replacements) {
+      applyConfirmedReplacement(order, replacement);
+    }
+
+    request.status = "confirmed";
+    request.catNote = input.note || "";
+    request.decidedAt = updatedAt;
+    order.status = nextStatus;
+    order.updatedAt = updatedAt;
+    order.lastActorRole = ROLE.CAT;
+    ensureUnreadByRoles(order);
+    order.unreadByRoles[ROLE.CAT] = false;
+    order.unreadByRoles[ROLE.OWNER] = true;
+    order.events.push(
+      buildOrderEvent({
+        type: "replacement_confirmed",
+        actorRole: ROLE.CAT,
+        note: input.note || "",
+        now: new Date(updatedAt),
+      })
+    );
+
+    return {
+      order: clone(order),
+    };
+  }
+
+  async function rejectReplacement(orderId, replacementRequestId, input = {}) {
+    requireRole(ROLE.CAT);
+
+    const order = findOrder(orderId);
+    const request = findReplacementRequest(order, replacementRequestId);
+    assertPendingReplacement(request);
+    const updatedAt = currentNow().toISOString();
+    const nextAction = input.nextAction || "cancel";
+    const nextStatus = nextAction === "cancel" ? ORDER_STATUS.CANCELLED : ORDER_STATUS.SUBMITTED;
+
+    request.status = "rejected";
+    request.catNote = input.note || "";
+    request.decidedAt = updatedAt;
+    order.status = nextStatus;
+    order.updatedAt = updatedAt;
+    order.lastActorRole = ROLE.CAT;
+    ensureUnreadByRoles(order);
+    order.unreadByRoles[ROLE.CAT] = false;
+    order.unreadByRoles[ROLE.OWNER] = true;
+    order.events.push(
+      buildOrderEvent({
+        type: "replacement_rejected",
+        actorRole: ROLE.CAT,
+        note: input.note || "",
+        now: new Date(updatedAt),
+      })
+    );
+
+    return {
+      order: clone(order),
+    };
+  }
+
   async function recordNotificationSubscriptions(input) {
     state.subscriptions.push(clone(input));
     return {
@@ -287,6 +406,66 @@ function createMockApiClient({ now = () => new Date(), initialOrders = [] } = {}
     };
   }
 
+  function buildReplacementInput(order, replacement) {
+    const original = order.items.find((item) => item.id === replacement.originalItemId);
+    if (!original) {
+      throw createError("ORDER_ITEM_NOT_FOUND", "原来的菜不存在", {
+        originalItemId: replacement.originalItemId,
+      });
+    }
+    const menuItem = replacement.replacementMenuItemId ? findVisibleMenuItem(replacement.replacementMenuItemId) : null;
+
+    return {
+      originalItemId: original.id,
+      originalItemName: original.name,
+      replacementMenuItemId: menuItem ? menuItem.id : "",
+      replacementMenuItemName: menuItem ? menuItem.name : "",
+      replacementWishName: replacement.replacementWishName || "",
+      reason: replacement.reason || "",
+    };
+  }
+
+  function applyConfirmedReplacement(order, replacement) {
+    const index = order.items.findIndex((item) => item.id === replacement.originalItemId);
+    if (index < 0) {
+      throw createError("ORDER_ITEM_NOT_FOUND", "原来的菜不存在", {
+        originalItemId: replacement.originalItemId,
+      });
+    }
+    const original = order.items[index];
+    const menuItem = findVisibleMenuItem(replacement.replacementMenuItemId);
+    order.items[index] = {
+      id: nextId("ord_item_replace"),
+      menuItemId: menuItem.id,
+      name: menuItem.name,
+      quantity: original.quantity,
+      note: original.note || "",
+      replacementForItemId: original.id,
+    };
+  }
+
+  function findReplacementRequest(order, replacementRequestId) {
+    const request = order.replacementRequests.find((candidate) => candidate.id === replacementRequestId);
+    if (!request) {
+      throw createError("REPLACEMENT_REQUEST_NOT_FOUND", "替换请求不存在", { replacementRequestId });
+    }
+    return request;
+  }
+
+  function assertPendingReplacement(request) {
+    if (request.status !== "pending") {
+      throw createError("REPLACEMENT_ALREADY_DECIDED", "这次替换已经处理过了", { status: request.status });
+    }
+  }
+
+  function findVisibleMenuItem(menuItemId) {
+    const item = findMenuItem(menuItemId);
+    if (item.hidden) {
+      throw createError("MENU_ITEM_NOT_FOUND", "菜品不存在或不可见", { menuItemId });
+    }
+    return item;
+  }
+
   function findOrder(orderId) {
     const order = state.orders.find((candidate) => candidate.id === orderId);
     if (!order) {
@@ -318,6 +497,7 @@ function createMockApiClient({ now = () => new Date(), initialOrders = [] } = {}
   return {
     acceptOrder,
     completeOrder,
+    confirmReplacement,
     createMenuItem,
     createOrder,
     createRepeatDraft,
@@ -327,6 +507,8 @@ function createMockApiClient({ now = () => new Date(), initialOrders = [] } = {}
     listOrders,
     markOrderRead,
     recordNotificationSubscriptions,
+    rejectReplacement,
+    requestReplacement,
     startCooking,
     updateMenuItem,
     wechatLogin,
@@ -394,6 +576,7 @@ function toOrderSummary(order, currentUser) {
     mealTime: order.mealTime,
     mood: order.mood,
     status: order.status,
+    replacementRequests: clone(order.replacementRequests || []),
     hasUnreadUpdate: Boolean(currentUser && order.unreadByRoles[currentUser.role]),
     itemNames: [
       ...order.items.map((item) => item.name),

@@ -1,3 +1,4 @@
+const { ROLE } = require("../../services/constants");
 const { getDevApiClient } = require("../../services/dev-api-client");
 const {
   buildCatOrderView,
@@ -12,14 +13,17 @@ Page({
   data: {
     hasOrder: false,
     hasNotificationWarning: false,
+    hasPendingReplacement: false,
     hasUnreadUpdate: false,
     hasWishItems: false,
+    canConfirmReplacement: false,
     canSend: false,
     isDraft: false,
     mealTimeText: "",
     message: "",
     moodText: "",
     order: null,
+    pendingReplacementRequest: null,
     statusDetail: "",
     statusLabel: "",
     statusCopy: "",
@@ -60,6 +64,58 @@ Page({
       });
       wx.showToast({
         title: "已发给主人",
+        icon: "success",
+      });
+    } catch (error) {
+      wx.showToast({
+        title: error.message,
+        icon: "none",
+      });
+    }
+  },
+
+  async confirmReplacement() {
+    await this.decideReplacement({
+      accept: true,
+      note: "可以，咪想吃这个",
+    });
+  },
+
+  async rejectReplacement() {
+    await this.decideReplacement({
+      accept: false,
+      note: "咪还是想重新点一下",
+    });
+  },
+
+  async decideReplacement({ accept, note }) {
+    if (!this.data.order || !this.data.pendingReplacementRequest) {
+      wx.showToast({
+        title: "没有要确认的替换",
+        icon: "none",
+      });
+      return;
+    }
+
+    try {
+      await api.wechatLogin({
+        code: "dev-code",
+        devRoleOverride: ROLE.CAT,
+      });
+      const orderId = this.data.order.id;
+      const requestId = this.data.pendingReplacementRequest.id;
+      const response = accept
+        ? await api.confirmReplacement(orderId, requestId, { note })
+        : await api.rejectReplacement(orderId, requestId, { nextAction: "cancel", note });
+      const view = buildCatOrderView(response.order);
+
+      wx.setStorageSync("latestOrder", response.order);
+      this.setData({
+        hasOrder: true,
+        ...view,
+      });
+      wx.showToast({
+        title: accept ? "咪同意啦" : "咪重新点",
         icon: "success",
       });
     } catch (error) {

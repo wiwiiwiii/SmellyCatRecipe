@@ -66,6 +66,57 @@ test("mock unread markers belong to the opposite role and clear after reading", 
   assert.equal(catRead.order.unreadByRoles.cat, false);
 });
 
+test("mock replacement request waits for cat confirmation before owner can accept", async () => {
+  const api = createMockApiClient();
+  await api.wechatLogin({ code: "dev-code", devRoleOverride: ROLE.CAT });
+
+  const created = await api.createOrder({
+    mealTime: "dinner",
+    mood: "tired",
+    items: [{ menuItemId: "tomato-egg-rice", quantity: 1 }],
+    wishItems: [],
+    note: "少一点米饭",
+  });
+  const originalItemId = created.order.items[0].id;
+
+  await api.wechatLogin({ code: "dev-code", devRoleOverride: ROLE.OWNER });
+  const requested = await api.requestReplacement(created.order.id, {
+    replacements: [
+      {
+        originalItemId,
+        replacementMenuItemId: "beef-udon",
+        reason: "主人想换成热乎的乌冬，咪看一下好不好。",
+      },
+    ],
+  });
+
+  assert.equal(requested.order.status, "replacement_requested");
+  assert.equal(requested.order.replacementRequests[0].status, "pending");
+  assert.equal(requested.order.replacementRequests[0].replacements[0].replacementMenuItemName, "肥牛乌冬面");
+  assert.equal(requested.order.unreadByRoles.cat, true);
+  await assert.rejects(() => api.acceptOrder(created.order.id), /替换还没有得到咪确认/);
+
+  await api.wechatLogin({ code: "dev-code", devRoleOverride: ROLE.CAT });
+  const confirmed = await api.confirmReplacement(
+    created.order.id,
+    requested.order.replacementRequests[0].id,
+    { note: "可以，咪想吃热乎的" },
+  );
+
+  assert.equal(confirmed.order.status, "replacement_requested");
+  assert.equal(confirmed.order.replacementRequests[0].status, "confirmed");
+  assert.equal(confirmed.order.items[0].name, "肥牛乌冬面");
+  assert.equal(confirmed.order.items[0].replacementForItemId, originalItemId);
+  assert.equal(confirmed.order.unreadByRoles.owner, true);
+
+  await api.wechatLogin({ code: "dev-code", devRoleOverride: ROLE.OWNER });
+  const ownerList = await api.listOrders({ scope: "current" });
+  assert.equal(ownerList.orders[0].replacementRequests[0].status, "confirmed");
+
+  const accepted = await api.acceptOrder(created.order.id);
+  assert.equal(accepted.order.status, "accepted");
+});
+
 test("mock repeat draft returns editable order input", async () => {
   const api = createMockApiClient();
   await api.wechatLogin({ code: "dev-code", devRoleOverride: "cat" });

@@ -27,7 +27,7 @@ function buildOwnerOrderListView({ orders = [] }) {
     itemsText: order.itemNames.join("、"),
     mealTimeText: MEAL_TIME_LABELS[order.mealTime] || order.mealTime,
     moodText: MOOD_LABELS[order.mood] || order.mood,
-    statusText: getStatusCopy(order.status, ROLE.OWNER),
+    statusText: getOwnerStatusText(order, hasPendingReplacementRequest(order)),
     hasUnreadUpdate: Boolean(order.hasUnreadUpdate),
     unreadLabel: order.hasUnreadUpdate ? "新点餐" : "",
   }));
@@ -42,18 +42,26 @@ function buildOwnerOrderListView({ orders = [] }) {
   };
 }
 
-function buildOwnerOrderDetailView({ order }) {
-  const primaryAction = ACTIONS_BY_STATUS[order.status] || null;
+function buildOwnerOrderDetailView({ order, menuItems = [] }) {
+  const hasPendingReplacement = hasPendingReplacementRequest(order);
+  const primaryAction = getPrimaryAction(order, hasPendingReplacement);
+  const canRequestReplacement = order.status === ORDER_STATUS.SUBMITTED;
+  const items = order.items.map((item) => ({
+    ...item,
+    replacementSuggestion: canRequestReplacement ? getReplacementSuggestion(item, menuItems) : null,
+  }));
 
   return {
     canAct: Boolean(primaryAction),
+    canRequestReplacement,
     hasUnreadUpdate: Boolean(order.unreadByRoles && order.unreadByRoles[ROLE.OWNER]),
     hasWishItems: Array.isArray(order.wishItems) && order.wishItems.length > 0,
+    items,
     mealTimeText: MEAL_TIME_LABELS[order.mealTime] || order.mealTime,
     moodText: MOOD_LABELS[order.mood] || order.mood,
     order,
     primaryAction,
-    statusText: getStatusCopy(order.status, ROLE.OWNER),
+    statusText: getOwnerStatusText(order, hasPendingReplacement),
     unreadLabel: getOwnerUnreadLabel(order),
   };
 }
@@ -61,6 +69,46 @@ function buildOwnerOrderDetailView({ order }) {
 function getOwnerUnreadLabel(order) {
   if (!(order.unreadByRoles && order.unreadByRoles[ROLE.OWNER])) return "";
   return order.status === ORDER_STATUS.SUBMITTED ? "有新点餐" : "有新进展";
+}
+
+function getPrimaryAction(order, hasPendingReplacement) {
+  if (order.status === ORDER_STATUS.REPLACEMENT_REQUESTED) {
+    if (hasPendingReplacement) return null;
+    return ACTIONS_BY_STATUS[ORDER_STATUS.SUBMITTED];
+  }
+
+  return ACTIONS_BY_STATUS[order.status] || null;
+}
+
+function hasPendingReplacementRequest(order) {
+  return (order.replacementRequests || []).some((request) => request.status === "pending");
+}
+
+function hasConfirmedReplacementRequest(order) {
+  return (order.replacementRequests || []).some((request) => request.status === "confirmed");
+}
+
+function getOwnerStatusText(order, hasPendingReplacement) {
+  if (
+    order.status === ORDER_STATUS.REPLACEMENT_REQUESTED &&
+    !hasPendingReplacement &&
+    hasConfirmedReplacementRequest(order)
+  ) {
+    return "咪同意换啦，可以接单";
+  }
+
+  return getStatusCopy(order.status, ROLE.OWNER);
+}
+
+function getReplacementSuggestion(orderItem, menuItems) {
+  const suggestion = menuItems.find((item) => !item.hidden && item.id !== orderItem.menuItemId);
+  if (!suggestion) return null;
+
+  return {
+    id: suggestion.id,
+    name: suggestion.name,
+    actionLabel: `换成${suggestion.name}`,
+  };
 }
 
 function resolveOwnerActiveOrderId({ orders = [], preferredOrderId = "" }) {

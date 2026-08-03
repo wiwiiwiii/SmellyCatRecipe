@@ -111,6 +111,8 @@ function buildCatOrderView(order) {
   if (order.isDraft) {
     return {
       canSend: true,
+      canConfirmReplacement: false,
+      hasPendingReplacement: false,
       hasNotificationWarning: false,
       hasUnreadUpdate: false,
       hasWishItems: Array.isArray(order.wishItems) && order.wishItems.length > 0,
@@ -119,6 +121,7 @@ function buildCatOrderView(order) {
       message: formatCatOrderMessage(order),
       moodText: MOOD_LABELS[order.mood] || "",
       order,
+      pendingReplacementRequest: null,
       statusCopy: "点菜单先放这里，还没发给主人",
       statusDetail: "确认没问题再发送，主人现在还看不到。",
       statusLabel: "还没发送",
@@ -132,9 +135,12 @@ function buildCatOrderView(order) {
     ...order,
     status,
   };
+  const pendingReplacementRequest = buildPendingReplacementRequest(order);
 
   return {
+    canConfirmReplacement: Boolean(pendingReplacementRequest),
     canSend: false,
+    hasPendingReplacement: Boolean(pendingReplacementRequest),
     hasNotificationWarning: Boolean(order.notificationSummary && order.notificationSummary.hasWarning),
     hasUnreadUpdate: Boolean(order.unreadByRoles && order.unreadByRoles[ROLE.CAT]),
     hasWishItems: Array.isArray(order.wishItems) && order.wishItems.length > 0,
@@ -143,10 +149,11 @@ function buildCatOrderView(order) {
     message: formatCatOrderMessage(normalizedOrder),
     moodText: MOOD_LABELS[order.mood] || "",
     order: normalizedOrder,
-    statusCopy: getStatusCopy(status, ROLE.CAT),
-    statusDetail: getCatStatusDetail(status),
+    pendingReplacementRequest,
+    statusCopy: getCatStatusTitle(status, order, pendingReplacementRequest),
+    statusDetail: getCatStatusDetail(status, order, pendingReplacementRequest),
     statusLabel: "当前状态",
-    statusTitle: getStatusCopy(status, ROLE.CAT),
+    statusTitle: getCatStatusTitle(status, order, pendingReplacementRequest),
     unreadLabel: order.unreadByRoles && order.unreadByRoles[ROLE.CAT] ? "有新进展" : "",
   };
 }
@@ -154,8 +161,10 @@ function buildCatOrderView(order) {
 function buildEmptyCatOrderView() {
   return {
     canSend: false,
+    canConfirmReplacement: false,
     hasOrder: false,
     hasNotificationWarning: false,
+    hasPendingReplacement: false,
     hasUnreadUpdate: false,
     hasWishItems: false,
     isDraft: false,
@@ -163,6 +172,7 @@ function buildEmptyCatOrderView() {
     message: "",
     moodText: "",
     order: null,
+    pendingReplacementRequest: null,
     statusDetail: "",
     statusLabel: "",
     statusCopy: "",
@@ -191,6 +201,32 @@ function formatCatOrderMessage(order) {
     ...wishLines,
     `备注：${order.note || "无"}`,
   ].join("\n");
+}
+
+function buildPendingReplacementRequest(order) {
+  const request = (order.replacementRequests || []).find((item) => item.status === "pending");
+  if (!request) return null;
+
+  const replacements = request.replacements || [];
+  const itemsText = replacements
+    .map((item) => {
+      const originalName = item.originalItemName || findOrderItemName(order, item.originalItemId);
+      const replacementName = item.replacementMenuItemName || item.replacementWishName || "主人换的菜";
+      return `${originalName} → ${replacementName}`;
+    })
+    .join("、");
+
+  return {
+    ...request,
+    title: "主人想换一道",
+    itemsText,
+    reasonText: replacements[0] && replacements[0].reason ? replacements[0].reason : "主人想换个更稳的安排，咪看一下好不好。",
+  };
+}
+
+function findOrderItemName(order, itemId) {
+  const item = (order.items || []).find((candidate) => candidate.id === itemId);
+  return item ? item.name : "原来的菜";
 }
 
 function isRenderableOrder(order) {
@@ -234,7 +270,27 @@ function buildDraftOrderItem(item, index) {
   };
 }
 
-function getCatStatusDetail(status) {
+function getCatStatusTitle(status, order, pendingReplacementRequest) {
+  if (
+    status === ORDER_STATUS.REPLACEMENT_REQUESTED &&
+    !pendingReplacementRequest &&
+    hasConfirmedReplacementRequest(order)
+  ) {
+    return "咪同意换啦，等主人接单";
+  }
+
+  return getStatusCopy(status, ROLE.CAT);
+}
+
+function getCatStatusDetail(status, order, pendingReplacementRequest) {
+  if (
+    status === ORDER_STATUS.REPLACEMENT_REQUESTED &&
+    !pendingReplacementRequest &&
+    hasConfirmedReplacementRequest(order)
+  ) {
+    return "主人收到后就会继续安排。";
+  }
+
   const details = {
     [ORDER_STATUS.SUBMITTED]: "已经发给主人，等主人看一下。",
     [ORDER_STATUS.ACCEPTED]: "主人接住了，咪可以等饭。",
@@ -245,6 +301,10 @@ function getCatStatusDetail(status) {
   };
 
   return details[status] || "";
+}
+
+function hasConfirmedReplacementRequest(order) {
+  return (order.replacementRequests || []).some((request) => request.status === "confirmed");
 }
 
 function removeStorage(storage, key) {

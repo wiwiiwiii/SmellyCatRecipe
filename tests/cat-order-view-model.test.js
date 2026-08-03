@@ -130,6 +130,87 @@ test("cat read marker clears after reading owner update", async () => {
   assert.equal(buildCatOrderView(read.order).hasUnreadUpdate, false);
 });
 
+test("cat order view exposes pending replacement confirmation copy", () => {
+  const view = buildCatOrderView({
+    id: "ord_0001",
+    mealTime: "dinner",
+    mood: "tired",
+    status: ORDER_STATUS.REPLACEMENT_REQUESTED,
+    items: [
+      {
+        id: "item_1",
+        menuItemId: "tomato-egg-rice",
+        name: "番茄炒蛋盖饭",
+        quantity: 1,
+        note: "",
+      },
+    ],
+    wishItems: [],
+    note: "",
+    unreadByRoles: {
+      cat: true,
+      owner: false,
+    },
+    replacementRequests: [
+      {
+        id: "rr_0001",
+        status: "pending",
+        replacements: [
+          {
+            originalItemId: "item_1",
+            originalItemName: "番茄炒蛋盖饭",
+            replacementMenuItemId: "beef-udon",
+            replacementMenuItemName: "肥牛乌冬面",
+            reason: "主人想换成热乎的乌冬，咪看一下好不好。",
+          },
+        ],
+      },
+    ],
+  });
+
+  assert.equal(view.hasPendingReplacement, true);
+  assert.equal(view.pendingReplacementRequest.id, "rr_0001");
+  assert.equal(view.pendingReplacementRequest.title, "主人想换一道");
+  assert.equal(view.pendingReplacementRequest.itemsText, "番茄炒蛋盖饭 → 肥牛乌冬面");
+  assert.equal(view.canConfirmReplacement, true);
+});
+
+test("cat order view shows confirmed replacement as waiting for owner", () => {
+  const view = buildCatOrderView({
+    id: "ord_0001",
+    mealTime: "dinner",
+    mood: "tired",
+    status: ORDER_STATUS.REPLACEMENT_REQUESTED,
+    items: [
+      {
+        id: "item_2",
+        menuItemId: "beef-udon",
+        name: "肥牛乌冬面",
+        quantity: 1,
+        note: "",
+        replacementForItemId: "item_1",
+      },
+    ],
+    wishItems: [],
+    note: "",
+    unreadByRoles: {
+      cat: false,
+      owner: true,
+    },
+    replacementRequests: [
+      {
+        id: "rr_0001",
+        status: "confirmed",
+        replacements: [],
+      },
+    ],
+  });
+
+  assert.equal(view.hasPendingReplacement, false);
+  assert.equal(view.statusTitle, "咪同意换啦，等主人接单");
+  assert.equal(view.statusDetail, "主人收到后就会继续安排。");
+});
+
 test("cat menu can detect whether there is a latest order to revisit", () => {
   const emptyStorage = createMemoryStorage();
   const filledStorage = createMemoryStorage();
