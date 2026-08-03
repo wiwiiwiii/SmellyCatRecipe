@@ -2,6 +2,7 @@ const { createPostgresApiClient } = require("./api/postgres-api-client");
 const { createWechatAuthService } = require("./auth/wechat-auth-service");
 const { createPoolFromEnv } = require("./db/pool");
 const { createApp, listen } = require("./http/app");
+const { createWechatSubscribeService } = require("./notifications/wechat-subscribe-service");
 const { createMenuItemsRepository } = require("./repositories/menu-items-repository");
 const { createUsersRepository } = require("./repositories/users-repository");
 
@@ -13,6 +14,7 @@ async function main() {
     apiClient: createPostgresApiClient({
       pool,
       menuItemsRepository,
+      notificationService: createWechatSubscribeService(),
     }),
     authService: createWechatAuthService({
       userRepository: usersRepository,
