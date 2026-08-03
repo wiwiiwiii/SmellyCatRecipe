@@ -23,6 +23,26 @@ npm run check
 3. 如果没有正式 AppID，使用测试号导入。
 4. 编译后进入“咪的喂食器”首页。
 
+## 启动后端
+
+第一版后端骨架使用 Node.js 原生 HTTP 服务和 PostgreSQL。数据库结构通过 SQL migration 管理。
+
+```bash
+createdb smelly_cat_recipe
+export DATABASE_URL=postgres://postgres:postgres@localhost:5432/smelly_cat_recipe
+npm run backend:migrate
+npm run backend:seed
+npm run backend:dev
+```
+
+启动后访问：
+
+```bash
+curl http://localhost:3000/health
+```
+
+更多说明见 `docs/backend.md`。
+
 ## 测试主人端
 
 1. 在小猫端选择餐次、状态和菜品。
@@ -49,7 +69,8 @@ npm run check
 - 开发态主人端可从菜单中选择替换建议，小猫端确认后主人才能继续接单。
 - 主人端和小猫端都可取消未完成订单。
 - 开发态主人端可新增、编辑、隐藏和恢复菜品。
+- 自建后端骨架：Postgres 连接、可迁移 schema、菜单读取、开发登录和健康检查。
 
 ## 后续方向
 
-- 接入自建后端和微信订阅消息，把点餐结果自动提醒给主人。
+- 补齐后端订单、替换、取消、已读、历史接口，并接入微信订阅消息。

@@ -15,6 +15,19 @@ All changes into `qa` and `main` must go through PRs. This is a single-developer
 
 - `npm run check`
 
+## Backend Development
+
+The backend uses PostgreSQL and versioned SQL migrations.
+
+```bash
+export DATABASE_URL=postgres://postgres:postgres@localhost:5432/smelly_cat_recipe
+npm run backend:migrate
+npm run backend:seed
+npm run backend:dev
+```
+
+Add schema changes as new files under `backend/db/migrations` using an increasing numeric prefix, for example `002_add_notification_subscriptions.sql`. Do not edit an already-applied migration after it has been merged.
+
 ## Branch Protection
 
 Protect both `main` and `qa`:
