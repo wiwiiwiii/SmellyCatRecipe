@@ -11,7 +11,7 @@ The backend is a small self-hosted Node.js service for the WeChat mini program. 
 - Versioned SQL migrations.
 - Menu item repository and owner menu write endpoints.
 - Order creation, current/history reads, read markers, owner cooking actions, replacement confirmation, and cancellation.
-- Notification template metadata, subscription-result recording, and notification log reads.
+- WeChat subscription message sending, subscription-result recording, and notification logs.
 - Menu seed script based on the current mini program menu data.
 
 ## Requirements
@@ -100,6 +100,7 @@ WECHAT_APP_SECRET=replace-with-wechat-mini-program-app-secret
 WECHAT_CAT_OPENIDS=cat-openid
 WECHAT_OWNER_OPENIDS=owner-openid
 WECHAT_ALLOW_UNKNOWN_CAT=false
+WECHAT_MINIPROGRAM_STATE=formal
 WECHAT_TEMPLATE_OWNER_NEW_ORDER=
 WECHAT_TEMPLATE_CAT_REPLACEMENT_REQUESTED=
 WECHAT_TEMPLATE_CAT_ORDER_ACCEPTED=
@@ -108,6 +109,14 @@ WECHAT_TEMPLATE_CAT_ORDER_COMPLETED=
 ```
 
 `WECHAT_ALLOW_UNKNOWN_CAT=false` is the production default for a private app. Any WeChat user whose `openid` is not listed in `WECHAT_CAT_OPENIDS` or `WECHAT_OWNER_OPENIDS` receives `WECHAT_OPENID_NOT_ALLOWED`.
+
+Subscription message sending uses the configured template IDs. Choose WeChat templates whose fields match the backend payload:
+
+- `thing1`: short status title, for example `咪点了晚饭`.
+- `thing2`: dish summary, for example `番茄炒蛋盖饭`.
+- `time3`: update time, formatted as `YYYY-MM-DD HH:mm`.
+
+Use `WECHAT_MINIPROGRAM_STATE=trial` for experience-version testing and `formal` for release.
 
 ## Mini Program Connection
 
@@ -123,7 +132,7 @@ The Mini Program must add the API host as a WeChat `request` legal domain before
 
 ## Deployment Checklist
 
-1. Provision PostgreSQL and set all backend environment variables.
+1. Provision PostgreSQL and set all backend environment variables, including WeChat template IDs.
 2. Run `npm run backend:migrate` against the production database.
 3. Run `npm run backend:seed` once to load the starter menu.
 4. Start `node backend/server.js` behind an HTTPS domain.

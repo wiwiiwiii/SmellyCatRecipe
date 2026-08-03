@@ -2,9 +2,14 @@ const crypto = require("node:crypto");
 const { ORDER_STATUS, ROLE } = require("../../services/constants");
 const { getNextOrderStatus } = require("../../services/order-state");
 const { createHttpError } = require("../auth/dev-auth-service");
+const { sendOrderNotification } = require("../notifications/order-notifications");
 const { createMenuItemsRepository } = require("../repositories/menu-items-repository");
 
-function createPostgresApiClient({ pool, menuItemsRepository = createMenuItemsRepository(pool) }) {
+function createPostgresApiClient({
+  pool,
+  menuItemsRepository = createMenuItemsRepository(pool),
+  notificationService = null,
+}) {
   return {
     async createMenuItem(input, user) {
       requireRole(user, ROLE.OWNER);
@@ -84,6 +89,12 @@ function createPostgresApiClient({ pool, menuItemsRepository = createMenuItemsRe
         await insertOrderEvent(tx, orderId, "submitted", ROLE.CAT, input.note || "", now);
       });
 
+      await sendOrderNotification({
+        notificationService,
+        orderId,
+        pool,
+        sourceAction: "cat_submit_order",
+      });
       return this.getOrder(orderId, user);
     },
 
@@ -154,15 +165,15 @@ function createPostgresApiClient({ pool, menuItemsRepository = createMenuItemsRe
     },
 
     async acceptOrder(orderId, user) {
-      return transitionOwnerOrder(pool, orderId, user, "accept", "accepted");
+      return transitionOwnerOrder(pool, notificationService, orderId, user, "accept", "accepted", "owner_accept_order");
     },
 
     async startCooking(orderId, user) {
-      return transitionOwnerOrder(pool, orderId, user, "start_cooking", "cooking");
+      return transitionOwnerOrder(pool, notificationService, orderId, user, "start_cooking", "cooking", "owner_start_cooking");
     },
 
     async completeOrder(orderId, user) {
-      return transitionOwnerOrder(pool, orderId, user, "complete", "completed");
+      return transitionOwnerOrder(pool, notificationService, orderId, user, "complete", "completed", "owner_complete_order");
     },
 
     async cancelOrder(orderId, input = {}, user) {
@@ -248,6 +259,12 @@ function createPostgresApiClient({ pool, menuItemsRepository = createMenuItemsRe
         );
       });
 
+      await sendOrderNotification({
+        notificationService,
+        orderId,
+        pool,
+        sourceAction: "owner_request_replacement",
+      });
       const updated = await loadOrder(pool, orderId);
       return {
         order: updated,
@@ -371,7 +388,7 @@ function createPostgresApiClient({ pool, menuItemsRepository = createMenuItemsRe
   };
 }
 
-async function transitionOwnerOrder(pool, orderId, user, action, eventType) {
+async function transitionOwnerOrder(pool, notificationService, orderId, user, action, eventType, sourceAction) {
   requireRole(user, ROLE.OWNER);
   const order = await loadOrder(pool, orderId);
   const hasPendingReplacement = order.replacementRequests.some((request) => request.status === "pending");
@@ -385,6 +402,12 @@ async function transitionOwnerOrder(pool, orderId, user, action, eventType) {
     await updateOrderStatus(tx, orderId, nextStatus, ROLE.OWNER);
     await setUnreadForOppositeRole(tx, orderId, ROLE.OWNER);
     await insertOrderEvent(tx, orderId, eventType, ROLE.OWNER);
+  });
+  await sendOrderNotification({
+    notificationService,
+    orderId,
+    pool,
+    sourceAction,
   });
   return {
     order: await loadOrder(pool, orderId),
