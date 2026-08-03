@@ -51,16 +51,20 @@
       <view>
         <view class="dish-name">{{item.name}}</view>
         <view class="dish-desc">{{item.note || '咪想吃这个'}}</view>
-        <button
-          wx:if="{{detail.canRequestReplacement && item.replacementSuggestion}}"
-          class="replace-button"
-          data-original-id="{{item.id}}"
-          data-replacement-id="{{item.replacementSuggestion.id}}"
-          data-replacement-name="{{item.replacementSuggestion.name}}"
-          bindtap="requestReplacement"
-        >
-          {{item.replacementSuggestion.actionLabel}}
-        </button>
+        <view wx:if="{{detail.canRequestReplacement && item.replacementOptions.length}}" class="replace-options">
+          <button
+            wx:for="{{item.replacementOptions}}"
+            wx:for-item="option"
+            wx:key="id"
+            class="replace-button"
+            data-original-id="{{item.id}}"
+            data-replacement-id="{{option.id}}"
+            data-replacement-name="{{option.name}}"
+            catchtap="requestReplacement"
+          >
+            {{option.actionLabel}}
+          </button>
+        </view>
       </view>
       <view class="dish-count">x{{item.quantity}}</view>
     </view>
@@ -87,7 +91,14 @@
     >
       {{detail.primaryAction.label}}
     </button>
-    <view wx:else class="done-note">这单已经处理完了。</view>
+    <button
+      wx:if="{{detail.canCancel}}"
+      class="danger-button"
+      bindtap="cancelOrder"
+    >
+      {{detail.cancelLabel}}
+    </button>
+    <view wx:if="{{!detail.canAct && !detail.canCancel}}" class="done-note">这单已经处理完了。</view>
   </view>
 
 </view>

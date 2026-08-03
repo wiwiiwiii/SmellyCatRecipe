@@ -67,6 +67,7 @@
 - `submitted -> accepted`：主人直接接单。
 - `accepted -> cooking`：主人开始做饭。
 - `cooking -> completed`：主人做好饭。
+- `submitted|replacement_requested|accepted|cooking -> cancelled`：咪或主人取消未完成订单。
 
 ## 错误格式
 
@@ -244,7 +245,7 @@
 
 #### `POST /orders/{orderId}/repeat-draft`
 
-小猫端从历史订单生成复点草稿。接口只返回草稿，不直接创建新订单。
+小猫端从已完成历史订单生成复点草稿。接口只返回草稿，不直接创建新订单；取消订单不作为“吃过的”菜单展示。
 
 响应：
 
@@ -328,6 +329,16 @@
 #### `POST /orders/{orderId}/cancel`
 
 取消订单。咪和主人都可以调用，但服务端按状态校验是否允许。
+
+请求：
+
+```json
+{
+  "note": "咪不吃了"
+}
+```
+
+取消后订单进入 `cancelled`，服务端把对方角色的未读标记置为 `true`。
 
 ### 通知
 

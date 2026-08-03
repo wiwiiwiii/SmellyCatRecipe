@@ -192,7 +192,8 @@
 }
 
 .primary-button,
-.ghost-button {
+.ghost-button,
+.danger-button {
   height: 80rpx;
   line-height: 80rpx;
   margin-top: 24rpx;
@@ -208,6 +209,11 @@
 .ghost-button {
   background: #30231c;
   color: #ffd3a1;
+}
+
+.danger-button {
+  background: rgba(232, 93, 63, 0.16);
+  color: #ffb6a8;
 }
 
 .compact-button {

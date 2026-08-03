@@ -27,6 +27,17 @@ const STATUS_COPY = {
   },
 };
 
+const ACTIVE_CANCEL_STATUSES = new Set([
+  ORDER_STATUS.SUBMITTED,
+  ORDER_STATUS.REPLACEMENT_REQUESTED,
+  ORDER_STATUS.ACCEPTED,
+  ORDER_STATUS.COOKING,
+]);
+
+function canCancelOrder(order) {
+  return Boolean(order && ACTIVE_CANCEL_STATUSES.has(order.status));
+}
+
 function getNextOrderStatus(input) {
   assertTransition(input);
 
@@ -97,6 +108,7 @@ function assertCat(role) {
 module.exports = {
   assertTransition,
   buildOrderEvent,
+  canCancelOrder,
   getNextOrderStatus,
   getStatusCopy,
 };

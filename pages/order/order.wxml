@@ -54,6 +54,7 @@
     </view>
 
     <button wx:if="{{canSend}}" class="primary-button" bindtap="sendOrderToOwner">发送给主人</button>
+    <button wx:if="{{canCancel}}" class="danger-button" bindtap="cancelOrder">{{cancelLabel}}</button>
     <button class="{{canSend ? 'ghost-button' : 'primary-button'}}" bindtap="copyOrder">复制备用文案</button>
     <button class="ghost-button" bindtap="backToMenu">继续加菜</button>
   </block>
