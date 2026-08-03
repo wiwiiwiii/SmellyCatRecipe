@@ -1,6 +1,6 @@
 # 咪的喂食器
 
-一个给女朋友点餐用的微信小程序启动项目。首版使用原生微信小程序结构，支持浏览菜单、选择菜品、填写口味备注、生成点菜单、发送给主人、查看状态和一键复点。
+一个给女朋友点餐用的微信小程序项目。当前版本使用原生微信小程序结构，支持浏览菜单、选择菜品、填写口味备注、生成点菜单、发送给主人、查看状态、一键复点和自建后端接入。
 
 ## 本地验证
 
@@ -25,11 +25,12 @@ npm run check
 
 ## 启动后端
 
-第一版后端骨架使用 Node.js 原生 HTTP 服务和 PostgreSQL。数据库结构通过 SQL migration 管理。
+后端使用 Node.js 原生 HTTP 服务和 PostgreSQL。数据库结构通过 SQL migration 管理，启动前需要设置数据库、token 和微信小程序相关环境变量。
 
 ```bash
 createdb smelly_cat_recipe
 export DATABASE_URL=postgres://postgres:postgres@localhost:5432/smelly_cat_recipe
+export TOKEN_SECRET=local-development-secret-change-before-deploy
 npm run backend:migrate
 npm run backend:seed
 npm run backend:dev
@@ -42,6 +43,12 @@ curl http://localhost:3000/health
 ```
 
 更多说明见 `docs/backend.md`。
+
+也可以用 Docker 启动本地 Postgres 和 API：
+
+```bash
+docker compose up --build
+```
 
 ## 测试主人端
 
@@ -69,8 +76,9 @@ curl http://localhost:3000/health
 - 开发态主人端可从菜单中选择替换建议，小猫端确认后主人才能继续接单。
 - 主人端和小猫端都可取消未完成订单。
 - 开发态主人端可新增、编辑、隐藏和恢复菜品。
-- 自建后端骨架：Postgres 连接、可迁移 schema、菜单读取、开发登录和健康检查。
+- 自建后端：Postgres 连接、可迁移 schema、微信登录、菜单维护、订单状态、替换确认、取消、已读标记和通知记录接口。
 
 ## 后续方向
 
-- 补齐后端订单、替换、取消、已读、历史接口，并接入微信订阅消息。
+- 配置正式微信订阅消息模板并接入真实发送任务。
+- 部署 HTTPS API，设置 `config/api.js` 的 `API_BASE_URL`，并在微信后台加入 request 合法域名。

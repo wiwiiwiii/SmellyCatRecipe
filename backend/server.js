@@ -1,11 +1,23 @@
+const { createPostgresApiClient } = require("./api/postgres-api-client");
+const { createWechatAuthService } = require("./auth/wechat-auth-service");
 const { createPoolFromEnv } = require("./db/pool");
 const { createApp, listen } = require("./http/app");
 const { createMenuItemsRepository } = require("./repositories/menu-items-repository");
+const { createUsersRepository } = require("./repositories/users-repository");
 
 async function main() {
   const pool = createPoolFromEnv();
+  const menuItemsRepository = createMenuItemsRepository(pool);
+  const usersRepository = createUsersRepository(pool);
   const app = createApp({
-    menuItemsRepository: createMenuItemsRepository(pool),
+    apiClient: createPostgresApiClient({
+      pool,
+      menuItemsRepository,
+    }),
+    authService: createWechatAuthService({
+      userRepository: usersRepository,
+    }),
+    menuItemsRepository,
   });
   const port = Number(process.env.PORT || 3000);
   await listen(app, { port });
