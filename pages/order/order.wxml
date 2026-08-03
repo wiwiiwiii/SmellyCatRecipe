@@ -8,6 +8,16 @@
       <view class="status-subtitle">{{statusDetail || statusCopy}}</view>
     </view>
 
+    <view wx:if="{{hasPendingReplacement}}" class="replacement-card">
+      <view class="replacement-title">{{pendingReplacementRequest.title}}</view>
+      <view class="replacement-items">{{pendingReplacementRequest.itemsText}}</view>
+      <view class="replacement-reason">{{pendingReplacementRequest.reasonText}}</view>
+      <view class="replacement-actions">
+        <button class="primary-button compact-button" bindtap="confirmReplacement">可以，换吧</button>
+        <button class="ghost-button compact-button" bindtap="rejectReplacement">不换，咪重新点</button>
+      </view>
+    </view>
+
     <view class="section">
       <view class="section-title">这顿是 {{mealTimeText}}</view>
       <view class="section-note">{{moodText}}</view>

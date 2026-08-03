@@ -19,6 +19,7 @@ Page({
     heroSubtitle: "",
     heroTitle: "",
     isLoading: false,
+    menuItems: [],
     orders: [],
   },
 
@@ -36,6 +37,7 @@ Page({
       });
 
       const response = await api.listOrders({ scope: "current" });
+      const menuResponse = await api.listMenuItems({});
       const listView = buildOwnerOrderListView({ orders: response.orders });
       const activeOrderId = resolveOwnerActiveOrderId({
         orders: listView.orders,
@@ -45,6 +47,7 @@ Page({
       this.setData({
         ...listView,
         activeOrderId,
+        menuItems: menuResponse.items,
         orders: markActiveOrder(listView.orders, activeOrderId),
       });
 
@@ -77,7 +80,10 @@ Page({
 
   async loadOrderDetail(orderId) {
     const response = await api.getOrder(orderId);
-    const detail = buildOwnerOrderDetailView({ order: response.order });
+    const detail = buildOwnerOrderDetailView({
+      order: response.order,
+      menuItems: this.data.menuItems,
+    });
 
     this.setData({
       detail,
@@ -115,6 +121,45 @@ Page({
 
       wx.showToast({
         title: "主人处理好了",
+        icon: "success",
+      });
+      await this.refreshOwnerOrders();
+    } catch (error) {
+      wx.showToast({
+        title: error.message,
+        icon: "none",
+      });
+    }
+  },
+
+  async requestReplacement(event) {
+    if (!this.data.detail || !this.data.detail.order) {
+      wx.showToast({
+        title: "先选一单",
+        icon: "none",
+      });
+      return;
+    }
+
+    const { originalId, replacementId, replacementName } = event.currentTarget.dataset;
+
+    try {
+      await api.wechatLogin({
+        code: "dev-code",
+        devRoleOverride: ROLE.OWNER,
+      });
+      await api.requestReplacement(this.data.detail.order.id, {
+        replacements: [
+          {
+            originalItemId: originalId,
+            replacementMenuItemId: replacementId,
+            reason: `主人想换成${replacementName}，咪看一下好不好。`,
+          },
+        ],
+      });
+
+      wx.showToast({
+        title: "已问咪",
         icon: "success",
       });
       await this.refreshOwnerOrders();

@@ -225,6 +225,19 @@
   line-height: 1.45;
 }
 
+.replace-button {
+  width: auto;
+  height: 54rpx;
+  line-height: 54rpx;
+  margin: 16rpx 0 0;
+  padding: 0 18rpx;
+  border-radius: 999rpx;
+  background: rgba(242, 166, 90, 0.14);
+  color: #ffd3a1;
+  font-size: 23rpx;
+  font-weight: 800;
+}
+
 .dish-count {
   flex: none;
   color: #f2a65a;

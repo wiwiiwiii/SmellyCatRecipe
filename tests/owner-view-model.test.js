@@ -19,6 +19,7 @@ const baseOrder = {
   items: [
     {
       id: "item_1",
+      menuItemId: "tomato-egg-rice",
       name: "番茄炒蛋盖饭",
       quantity: 1,
       note: "米饭少一点",
@@ -68,6 +69,32 @@ test("owner list view summarizes current orders with warm owner copy", () => {
   assert.equal(view.orders[0].itemsText, "番茄炒蛋盖饭、咖喱猪排饭");
   assert.equal(view.orders[0].hasUnreadUpdate, true);
   assert.equal(view.orders[0].unreadLabel, "新点餐");
+});
+
+test("owner list view shows confirmed replacement as ready to accept", () => {
+  const view = buildOwnerOrderListView({
+    orders: [
+      {
+        id: baseOrder.id,
+        mealTime: baseOrder.mealTime,
+        mood: baseOrder.mood,
+        status: ORDER_STATUS.REPLACEMENT_REQUESTED,
+        itemNames: ["肥牛乌冬面"],
+        replacementRequests: [
+          {
+            id: "rr_1",
+            status: "confirmed",
+            replacements: [],
+          },
+        ],
+        hasUnreadUpdate: true,
+        createdAt: baseOrder.createdAt,
+        updatedAt: baseOrder.updatedAt,
+      },
+    ],
+  });
+
+  assert.equal(view.orders[0].statusText, "咪同意换啦，可以接单");
 });
 
 test("owner detail view exposes the right action for submitted, accepted and cooking orders", () => {
@@ -123,6 +150,66 @@ test("owner detail view keeps completed orders read-only", () => {
   assert.equal(view.canAct, false);
   assert.equal(view.primaryAction, null);
   assert.equal(view.statusText, "已完成，叫咪来吃");
+});
+
+test("owner detail waits for pending replacement but can accept after cat confirms", () => {
+  const pending = buildOwnerOrderDetailView({
+    order: {
+      ...baseOrder,
+      status: ORDER_STATUS.REPLACEMENT_REQUESTED,
+      replacementRequests: [
+        {
+          id: "rr_1",
+          status: "pending",
+          replacements: [],
+        },
+      ],
+    },
+  });
+  assert.equal(pending.canAct, false);
+  assert.equal(pending.primaryAction, null);
+
+  const confirmed = buildOwnerOrderDetailView({
+    order: {
+      ...baseOrder,
+      status: ORDER_STATUS.REPLACEMENT_REQUESTED,
+      replacementRequests: [
+        {
+          id: "rr_1",
+          status: "confirmed",
+          replacements: [],
+        },
+      ],
+    },
+  });
+  assert.equal(confirmed.canAct, true);
+  assert.equal(confirmed.statusText, "咪同意换啦，可以接单");
+  assert.deepEqual(confirmed.primaryAction, {
+    action: "accept",
+    label: "主人收到啦",
+  });
+});
+
+test("owner detail view suggests a replacement action for submitted items", () => {
+  const view = buildOwnerOrderDetailView({
+    order: baseOrder,
+    menuItems: [
+      {
+        id: "tomato-egg-rice",
+        name: "番茄炒蛋盖饭",
+        hidden: false,
+      },
+      {
+        id: "beef-udon",
+        name: "肥牛乌冬面",
+        hidden: false,
+      },
+    ],
+  });
+
+  assert.equal(view.canRequestReplacement, true);
+  assert.equal(view.items[0].replacementSuggestion.id, "beef-udon");
+  assert.equal(view.items[0].replacementSuggestion.actionLabel, "换成肥牛乌冬面");
 });
 
 test("owner active order resolver drops stale completed order ids", () => {

@@ -72,6 +72,43 @@
   box-shadow: 0 10rpx 36rpx rgba(0, 0, 0, 0.16);
 }
 
+.replacement-card {
+  margin-top: 28rpx;
+  padding: 28rpx;
+  border-radius: 28rpx;
+  background: #30231c;
+  border: 2rpx solid rgba(242, 166, 90, 0.42);
+  box-shadow: 0 14rpx 44rpx rgba(0, 0, 0, 0.22);
+}
+
+.replacement-title {
+  color: #f8ead8;
+  font-size: 32rpx;
+  font-weight: 800;
+}
+
+.replacement-items {
+  margin-top: 12rpx;
+  color: #f2a65a;
+  font-size: 28rpx;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.replacement-reason {
+  margin-top: 12rpx;
+  color: #c9aa8d;
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+
+.replacement-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 22rpx;
+}
+
 .section-title {
   color: #f8ead8;
   font-size: 32rpx;
@@ -171,6 +208,14 @@
 .ghost-button {
   background: #30231c;
   color: #ffd3a1;
+}
+
+.compact-button {
+  flex: 1 1 250rpx;
+  min-width: 0;
+  margin-top: 0;
+  padding: 0 18rpx;
+  font-size: 26rpx;
 }
 
 .empty-card {
