@@ -5,7 +5,10 @@ const {
   ROLE,
 } = require("./constants");
 const { MENU_ITEMS } = require("../data/menu");
-const { getStatusCopy } = require("./order-state");
+const {
+  canCancelOrder,
+  getStatusCopy,
+} = require("./order-state");
 
 async function loadLatestCatOrder({ api, storage }) {
   const draft = storage.getStorageSync("draftOrder");
@@ -110,6 +113,8 @@ async function sendCatOrderDraft({ api, storage }) {
 function buildCatOrderView(order) {
   if (order.isDraft) {
     return {
+      canCancel: false,
+      cancelLabel: "",
       canSend: true,
       canConfirmReplacement: false,
       hasPendingReplacement: false,
@@ -135,10 +140,13 @@ function buildCatOrderView(order) {
     ...order,
     status,
   };
-  const pendingReplacementRequest = buildPendingReplacementRequest(order);
+  const canCancel = canCancelOrder(normalizedOrder);
+  const pendingReplacementRequest = canCancel ? buildPendingReplacementRequest(normalizedOrder) : null;
 
   return {
+    canCancel,
     canConfirmReplacement: Boolean(pendingReplacementRequest),
+    cancelLabel: canCancel ? "咪不吃了" : "",
     canSend: false,
     hasPendingReplacement: Boolean(pendingReplacementRequest),
     hasNotificationWarning: Boolean(order.notificationSummary && order.notificationSummary.hasWarning),
@@ -150,18 +158,20 @@ function buildCatOrderView(order) {
     moodText: MOOD_LABELS[order.mood] || "",
     order: normalizedOrder,
     pendingReplacementRequest,
-    statusCopy: getCatStatusTitle(status, order, pendingReplacementRequest),
-    statusDetail: getCatStatusDetail(status, order, pendingReplacementRequest),
+    statusCopy: getCatStatusTitle(status, normalizedOrder, pendingReplacementRequest),
+    statusDetail: getCatStatusDetail(status, normalizedOrder, pendingReplacementRequest),
     statusLabel: "当前状态",
-    statusTitle: getCatStatusTitle(status, order, pendingReplacementRequest),
+    statusTitle: getCatStatusTitle(status, normalizedOrder, pendingReplacementRequest),
     unreadLabel: order.unreadByRoles && order.unreadByRoles[ROLE.CAT] ? "有新进展" : "",
   };
 }
 
 function buildEmptyCatOrderView() {
   return {
+    canCancel: false,
     canSend: false,
     canConfirmReplacement: false,
+    cancelLabel: "",
     hasOrder: false,
     hasNotificationWarning: false,
     hasPendingReplacement: false,

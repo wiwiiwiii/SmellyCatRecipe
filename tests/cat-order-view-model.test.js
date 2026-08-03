@@ -211,6 +211,94 @@ test("cat order view shows confirmed replacement as waiting for owner", () => {
   assert.equal(view.statusDetail, "主人收到后就会继续安排。");
 });
 
+test("cat order view exposes cancel action for active sent orders only", () => {
+  const baseSentOrder = {
+    id: "ord_0001",
+    mealTime: "dinner",
+    mood: "tired",
+    items: [
+      {
+        id: "item_1",
+        menuItemId: "tomato-egg-rice",
+        name: "番茄炒蛋盖饭",
+        quantity: 1,
+        note: "",
+      },
+    ],
+    wishItems: [],
+    note: "",
+    unreadByRoles: {
+      cat: false,
+      owner: true,
+    },
+  };
+
+  for (const status of [
+    ORDER_STATUS.SUBMITTED,
+    ORDER_STATUS.REPLACEMENT_REQUESTED,
+    ORDER_STATUS.ACCEPTED,
+    ORDER_STATUS.COOKING,
+  ]) {
+    const active = buildCatOrderView({
+      ...baseSentOrder,
+      status,
+    });
+    assert.equal(active.canCancel, true);
+    assert.equal(active.cancelLabel, "咪不吃了");
+  }
+
+  const completed = buildCatOrderView({
+    ...baseSentOrder,
+    status: ORDER_STATUS.COMPLETED,
+  });
+  assert.equal(completed.canCancel, false);
+  assert.equal(completed.cancelLabel, "");
+});
+
+test("cat order view hides replacement decisions after order is cancelled", () => {
+  const view = buildCatOrderView({
+    id: "ord_0001",
+    mealTime: "dinner",
+    mood: "tired",
+    status: ORDER_STATUS.CANCELLED,
+    items: [
+      {
+        id: "item_1",
+        menuItemId: "tomato-egg-rice",
+        name: "番茄炒蛋盖饭",
+        quantity: 1,
+        note: "",
+      },
+    ],
+    wishItems: [],
+    note: "",
+    unreadByRoles: {
+      cat: true,
+      owner: false,
+    },
+    replacementRequests: [
+      {
+        id: "rr_0001",
+        status: "pending",
+        replacements: [
+          {
+            originalItemId: "item_1",
+            originalItemName: "番茄炒蛋盖饭",
+            replacementMenuItemId: "beef-udon",
+            replacementMenuItemName: "肥牛乌冬面",
+            reason: "主人想换一道。",
+          },
+        ],
+      },
+    ],
+  });
+
+  assert.equal(view.canCancel, false);
+  assert.equal(view.hasPendingReplacement, false);
+  assert.equal(view.canConfirmReplacement, false);
+  assert.equal(view.pendingReplacementRequest, null);
+});
+
 test("cat menu can detect whether there is a latest order to revisit", () => {
   const emptyStorage = createMemoryStorage();
   const filledStorage = createMemoryStorage();

@@ -16,8 +16,10 @@ Page({
     hasPendingReplacement: false,
     hasUnreadUpdate: false,
     hasWishItems: false,
+    canCancel: false,
     canConfirmReplacement: false,
     canSend: false,
+    cancelLabel: "",
     isDraft: false,
     mealTimeText: "",
     message: "",
@@ -116,6 +118,42 @@ Page({
       });
       wx.showToast({
         title: accept ? "咪同意啦" : "咪重新点",
+        icon: "success",
+      });
+    } catch (error) {
+      wx.showToast({
+        title: error.message,
+        icon: "none",
+      });
+    }
+  },
+
+  async cancelOrder() {
+    if (!this.data.order || !this.data.canCancel) {
+      wx.showToast({
+        title: "这单不能取消了",
+        icon: "none",
+      });
+      return;
+    }
+
+    try {
+      await api.wechatLogin({
+        code: "dev-code",
+        devRoleOverride: ROLE.CAT,
+      });
+      const response = await api.cancelOrder(this.data.order.id, {
+        note: "咪不吃了",
+      });
+      const view = buildCatOrderView(response.order);
+
+      wx.setStorageSync("latestOrder", response.order);
+      this.setData({
+        hasOrder: true,
+        ...view,
+      });
+      wx.showToast({
+        title: "这单先不吃啦",
         icon: "success",
       });
     } catch (error) {

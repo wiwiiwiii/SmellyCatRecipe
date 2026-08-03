@@ -262,7 +262,7 @@ paths:
     post:
       tags:
         - Orders
-      summary: Build a repeat-order draft from a historical order.
+      summary: Build a repeat-order draft from a completed historical order.
       parameters:
         - $ref: "#/components/parameters/OrderIdPath"
       responses:
@@ -446,10 +446,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                reason:
-                  type: string
+              $ref: "#/components/schemas/CancelOrderRequest"
       responses:
         "200":
           description: Order cancelled.
@@ -1023,6 +1020,11 @@ components:
           enum:
             - revise
             - cancel
+        note:
+          type: string
+    CancelOrderRequest:
+      type: object
+      properties:
         note:
           type: string
     NotificationTemplate:

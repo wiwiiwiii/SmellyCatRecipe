@@ -4,7 +4,10 @@ const {
   ORDER_STATUS,
   ROLE,
 } = require("./constants");
-const { getStatusCopy } = require("./order-state");
+const {
+  canCancelOrder,
+  getStatusCopy,
+} = require("./order-state");
 
 const ACTIONS_BY_STATUS = {
   [ORDER_STATUS.SUBMITTED]: {
@@ -46,14 +49,17 @@ function buildOwnerOrderDetailView({ order, menuItems = [] }) {
   const hasPendingReplacement = hasPendingReplacementRequest(order);
   const primaryAction = getPrimaryAction(order, hasPendingReplacement);
   const canRequestReplacement = order.status === ORDER_STATUS.SUBMITTED;
+  const canCancel = canCancelOrder(order);
   const items = order.items.map((item) => ({
     ...item,
-    replacementSuggestion: canRequestReplacement ? getReplacementSuggestion(item, menuItems) : null,
+    replacementOptions: canRequestReplacement ? getReplacementOptions(item, menuItems) : [],
   }));
 
   return {
     canAct: Boolean(primaryAction),
+    canCancel,
     canRequestReplacement,
+    cancelLabel: canCancel ? "取消这单" : "",
     hasUnreadUpdate: Boolean(order.unreadByRoles && order.unreadByRoles[ROLE.OWNER]),
     hasWishItems: Array.isArray(order.wishItems) && order.wishItems.length > 0,
     items,
@@ -100,15 +106,14 @@ function getOwnerStatusText(order, hasPendingReplacement) {
   return getStatusCopy(order.status, ROLE.OWNER);
 }
 
-function getReplacementSuggestion(orderItem, menuItems) {
-  const suggestion = menuItems.find((item) => !item.hidden && item.id !== orderItem.menuItemId);
-  if (!suggestion) return null;
-
-  return {
-    id: suggestion.id,
-    name: suggestion.name,
-    actionLabel: `换成${suggestion.name}`,
-  };
+function getReplacementOptions(orderItem, menuItems) {
+  return menuItems
+    .filter((item) => !item.hidden && item.id !== orderItem.menuItemId)
+    .map((item) => ({
+      id: item.id,
+      name: item.name,
+      actionLabel: `换成${item.name}`,
+    }));
 }
 
 function resolveOwnerActiveOrderId({ orders = [], preferredOrderId = "" }) {

@@ -222,6 +222,39 @@ function createMockApiClient({ now = () => new Date(), initialOrders = [] } = {}
     return transitionOrder(orderId, "complete", "completed");
   }
 
+  async function cancelOrder(orderId, input = {}) {
+    requireAnyRole([ROLE.CAT, ROLE.OWNER]);
+
+    const actorRole = state.currentUser.role;
+    const order = findOrder(orderId);
+    const nextStatus = getNextOrderStatus({
+      currentStatus: order.status,
+      action: "cancel",
+      actorRole,
+    });
+    const updatedAt = currentNow().toISOString();
+    const unreadRole = actorRole === ROLE.OWNER ? ROLE.CAT : ROLE.OWNER;
+
+    order.status = nextStatus;
+    order.updatedAt = updatedAt;
+    order.lastActorRole = actorRole;
+    ensureUnreadByRoles(order);
+    order.unreadByRoles[actorRole] = false;
+    order.unreadByRoles[unreadRole] = true;
+    order.events.push(
+      buildOrderEvent({
+        type: "cancelled",
+        actorRole,
+        note: input.note || "",
+        now: new Date(updatedAt),
+      })
+    );
+
+    return {
+      order: clone(order),
+    };
+  }
+
   async function requestReplacement(orderId, input) {
     requireRole(ROLE.OWNER);
 
@@ -494,8 +527,21 @@ function createMockApiClient({ now = () => new Date(), initialOrders = [] } = {}
     }
   }
 
+  function requireAnyRole(roles) {
+    if (!state.currentUser) {
+      throw createError("AUTH_REQUIRED", "缺少或无效登录态");
+    }
+    if (!roles.includes(state.currentUser.role)) {
+      throw createError("FORBIDDEN_ROLE", "当前角色不能执行操作", {
+        allowedRoles: roles,
+        currentRole: state.currentUser.role,
+      });
+    }
+  }
+
   return {
     acceptOrder,
+    cancelOrder,
     completeOrder,
     confirmReplacement,
     createMenuItem,

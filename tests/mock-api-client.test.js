@@ -117,6 +117,42 @@ test("mock replacement request waits for cat confirmation before owner can accep
   assert.equal(accepted.order.status, "accepted");
 });
 
+test("owner and cat can cancel active orders and notify the other side", async () => {
+  const api = createMockApiClient();
+  await api.wechatLogin({ code: "dev-code", devRoleOverride: ROLE.CAT });
+  const ownerCancelledOrder = await api.createOrder({
+    mealTime: "dinner",
+    mood: "tired",
+    items: [{ menuItemId: "tomato-egg-rice", quantity: 1 }],
+    wishItems: [],
+    note: "少一点米饭",
+  });
+  const catCancelledOrder = await api.createOrder({
+    mealTime: "lunch",
+    mood: "hungry",
+    items: [{ menuItemId: "beef-udon", quantity: 1 }],
+    wishItems: [],
+    note: "",
+  });
+
+  await api.wechatLogin({ code: "dev-code", devRoleOverride: ROLE.OWNER });
+  const ownerCancelled = await api.cancelOrder(ownerCancelledOrder.order.id, { note: "主人今天来不及做" });
+  assert.equal(ownerCancelled.order.status, "cancelled");
+  assert.equal(ownerCancelled.order.unreadByRoles.cat, true);
+  assert.equal(ownerCancelled.order.unreadByRoles.owner, false);
+
+  await api.wechatLogin({ code: "dev-code", devRoleOverride: ROLE.CAT });
+  const catCancelled = await api.cancelOrder(catCancelledOrder.order.id, { note: "咪不吃了" });
+  assert.equal(catCancelled.order.status, "cancelled");
+  assert.equal(catCancelled.order.unreadByRoles.owner, true);
+  assert.equal(catCancelled.order.unreadByRoles.cat, false);
+
+  const current = await api.listOrders({ scope: "current" });
+  const history = await api.listOrders({ scope: "history" });
+  assert.equal(current.orders.length, 0);
+  assert.equal(history.orders.length, 2);
+});
+
 test("mock repeat draft returns editable order input", async () => {
   const api = createMockApiClient();
   await api.wechatLogin({ code: "dev-code", devRoleOverride: "cat" });

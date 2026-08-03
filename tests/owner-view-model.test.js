@@ -190,7 +190,7 @@ test("owner detail waits for pending replacement but can accept after cat confir
   });
 });
 
-test("owner detail view suggests a replacement action for submitted items", () => {
+test("owner detail view exposes selectable replacement options for submitted items", () => {
   const view = buildOwnerOrderDetailView({
     order: baseOrder,
     menuItems: [
@@ -204,12 +204,61 @@ test("owner detail view suggests a replacement action for submitted items", () =
         name: "肥牛乌冬面",
         hidden: false,
       },
+      {
+        id: "cola-chicken-wing",
+        name: "可乐鸡翅",
+        hidden: false,
+      },
+      {
+        id: "hidden-noodle",
+        name: "隐藏拌面",
+        hidden: true,
+      },
     ],
   });
 
   assert.equal(view.canRequestReplacement, true);
-  assert.equal(view.items[0].replacementSuggestion.id, "beef-udon");
-  assert.equal(view.items[0].replacementSuggestion.actionLabel, "换成肥牛乌冬面");
+  assert.deepEqual(
+    view.items[0].replacementOptions.map((item) => item.id),
+    ["beef-udon", "cola-chicken-wing"],
+  );
+  assert.equal(view.items[0].replacementOptions[0].actionLabel, "换成肥牛乌冬面");
+});
+
+test("owner detail view exposes cancel action for active orders only", () => {
+  for (const status of [
+    ORDER_STATUS.SUBMITTED,
+    ORDER_STATUS.REPLACEMENT_REQUESTED,
+    ORDER_STATUS.ACCEPTED,
+    ORDER_STATUS.COOKING,
+  ]) {
+    const active = buildOwnerOrderDetailView({
+      order: {
+        ...baseOrder,
+        status,
+      },
+    });
+    assert.equal(active.canCancel, true);
+    assert.equal(active.cancelLabel, "取消这单");
+  }
+
+  const completed = buildOwnerOrderDetailView({
+    order: {
+      ...baseOrder,
+      status: ORDER_STATUS.COMPLETED,
+    },
+  });
+  assert.equal(completed.canCancel, false);
+  assert.equal(completed.cancelLabel, "");
+
+  const cancelled = buildOwnerOrderDetailView({
+    order: {
+      ...baseOrder,
+      status: ORDER_STATUS.CANCELLED,
+    },
+  });
+  assert.equal(cancelled.canCancel, false);
+  assert.equal(cancelled.cancelLabel, "");
 });
 
 test("owner active order resolver drops stale completed order ids", () => {

@@ -171,6 +171,37 @@ Page({
     }
   },
 
+  async cancelOrder() {
+    if (!this.data.detail || !this.data.detail.order || !this.data.detail.canCancel) {
+      wx.showToast({
+        title: "这单不能取消了",
+        icon: "none",
+      });
+      return;
+    }
+
+    try {
+      await api.wechatLogin({
+        code: "dev-code",
+        devRoleOverride: ROLE.OWNER,
+      });
+      await api.cancelOrder(this.data.detail.order.id, {
+        note: "主人取消了这单",
+      });
+
+      wx.showToast({
+        title: "已取消",
+        icon: "success",
+      });
+      await this.refreshOwnerOrders();
+    } catch (error) {
+      wx.showToast({
+        title: error.message,
+        icon: "none",
+      });
+    }
+  },
+
   goCatMenu() {
     wx.navigateBack({
       delta: 1,
