@@ -98,6 +98,7 @@
 | `REPLACEMENT_CONFIRMATION_REQUIRED` | 替换未经咪确认 |
 | `SUBSCRIPTION_NOT_AUTHORIZED` | 用户未授权对应订阅消息 |
 | `WECHAT_API_FAILED` | 微信接口调用失败 |
+| `WECHAT_OPENID_NOT_ALLOWED` | 当前微信未绑定小猫端或主人端 |
 
 ## 接口清单
 
@@ -116,7 +117,7 @@
 }
 ```
 
-`devRoleOverride` 只允许开发环境使用，正式环境忽略。
+`devRoleOverride` 只允许开发环境使用，正式环境忽略。正式环境只允许配置在 `WECHAT_CAT_OPENIDS` 或 `WECHAT_OWNER_OPENIDS` 中的微信用户登录。
 
 响应：
 

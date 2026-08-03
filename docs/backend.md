@@ -2,28 +2,32 @@
 
 ## Scope
 
-The backend starts as a small self-hosted Node.js service for the WeChat mini program. The first backbone includes:
+The backend is a small self-hosted Node.js service for the WeChat mini program. The current pre-deploy backbone includes:
 
 - JSON health endpoint.
-- Development WeChat login stub.
+- WeChat login through `wx.login()` code exchange and server-issued app tokens.
+- Owner/cat role mapping from configured WeChat `openid` values.
 - PostgreSQL connection.
 - Versioned SQL migrations.
-- Menu item repository and `GET /v1/menu-items`.
+- Menu item repository and owner menu write endpoints.
+- Order creation, current/history reads, read markers, owner cooking actions, replacement confirmation, and cancellation.
+- Notification template metadata, subscription-result recording, and notification log reads.
 - Menu seed script based on the current mini program menu data.
-
-Order creation, order state transitions, replacement requests, read markers, and WeChat subscription messages will be added in later backend feature branches against the existing API contract.
 
 ## Requirements
 
 - Node.js 22 or compatible modern Node runtime.
 - PostgreSQL 14+.
 - `DATABASE_URL` pointing at the target database.
+- `TOKEN_SECRET` set to a long random value.
+- WeChat Mini Program AppID/AppSecret and the bound owner/cat `openid` values.
 
 Example local database:
 
 ```bash
 createdb smelly_cat_recipe
 export DATABASE_URL=postgres://postgres:postgres@localhost:5432/smelly_cat_recipe
+export TOKEN_SECRET=local-development-secret-change-before-deploy
 ```
 
 ## Commands
@@ -50,6 +54,12 @@ Start the API:
 
 ```bash
 npm run backend:dev
+```
+
+Start local Postgres and API with Docker:
+
+```bash
+docker compose up --build
 ```
 
 Check the server:
@@ -84,4 +94,39 @@ DATABASE_URL=postgres://postgres:postgres@localhost:5432/smelly_cat_recipe
 PORT=3000
 PG_POOL_MAX=10
 PGSSL=false
+TOKEN_SECRET=replace-with-a-long-random-secret
+WECHAT_APP_ID=replace-with-wechat-mini-program-app-id
+WECHAT_APP_SECRET=replace-with-wechat-mini-program-app-secret
+WECHAT_CAT_OPENIDS=cat-openid
+WECHAT_OWNER_OPENIDS=owner-openid
+WECHAT_ALLOW_UNKNOWN_CAT=false
+WECHAT_TEMPLATE_OWNER_NEW_ORDER=
+WECHAT_TEMPLATE_CAT_REPLACEMENT_REQUESTED=
+WECHAT_TEMPLATE_CAT_ORDER_ACCEPTED=
+WECHAT_TEMPLATE_CAT_ORDER_COOKING=
+WECHAT_TEMPLATE_CAT_ORDER_COMPLETED=
 ```
+
+`WECHAT_ALLOW_UNKNOWN_CAT=false` is the production default for a private app. Any WeChat user whose `openid` is not listed in `WECHAT_CAT_OPENIDS` or `WECHAT_OWNER_OPENIDS` receives `WECHAT_OPENID_NOT_ALLOWED`.
+
+## Mini Program Connection
+
+Set `API_BASE_URL` in `config/api.js` to the HTTPS API base URL before uploading a backend-connected build:
+
+```js
+const API_BASE_URL = "https://api.example.com/v1";
+```
+
+Leave it blank for mock-only local UI work.
+
+The Mini Program must add the API host as a WeChat `request` legal domain before real-device testing or release upload.
+
+## Deployment Checklist
+
+1. Provision PostgreSQL and set all backend environment variables.
+2. Run `npm run backend:migrate` against the production database.
+3. Run `npm run backend:seed` once to load the starter menu.
+4. Start `node backend/server.js` behind an HTTPS domain.
+5. Set `config/api.js` to the production `/v1` base URL.
+6. Configure the same API host in the WeChat Mini Program request legal domain list.
+7. Use WeChat DevTools to compile, preview on both identities, then upload an experience version.
