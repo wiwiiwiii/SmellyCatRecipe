@@ -35,7 +35,7 @@ For local backend smoke testing with Postgres:
 docker compose up --build
 ```
 
-For backend-connected Mini Program testing, set `API_BASE_URL` in `config/api.js` to the HTTPS `/v1` API base URL. Leave it blank when using the mock client.
+For backend-connected Mini Program testing, set `API_BASE_URL` in `services/api-config.js` to the HTTPS `/v1` API base URL. Leave it blank when using the mock client.
 
 Production backend auth is private by default: only openids configured in `WECHAT_CAT_OPENIDS` and `WECHAT_OWNER_OPENIDS` can log in. Keep `WECHAT_ALLOW_UNKNOWN_CAT=false` unless intentionally opening the app to unbound users.
 
@@ -76,6 +76,6 @@ Open a `qa` to `main` PR only when preparing a version update or production rele
 - Run `npm run backend:migrate` against the target Postgres database.
 - Run `npm run backend:seed` once for the starter menu.
 - Confirm `/health` returns `status: ok` on the HTTPS API host.
-- Set `config/api.js` to the production `/v1` API base URL before Mini Program upload.
+- Set `services/api-config.js` to the production `/v1` API base URL before Mini Program upload.
 - Add the API host to the WeChat Mini Program request legal domain list.
 - Compile and preview both 小猫端 and 主人端 in WeChat DevTools before uploading an experience version.

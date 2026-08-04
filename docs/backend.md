@@ -120,7 +120,7 @@ Use `WECHAT_MINIPROGRAM_STATE=trial` for experience-version testing and `formal`
 
 ## Mini Program Connection
 
-Set `API_BASE_URL` in `config/api.js` to the HTTPS API base URL before uploading a backend-connected build:
+Set `API_BASE_URL` in `services/api-config.js` to the HTTPS API base URL before uploading a backend-connected build:
 
 ```js
 const API_BASE_URL = "https://api.example.com/v1";
@@ -136,6 +136,6 @@ The Mini Program must add the API host as a WeChat `request` legal domain before
 2. Run `npm run backend:migrate` against the production database.
 3. Run `npm run backend:seed` once to load the starter menu.
 4. Start `node backend/server.js` behind an HTTPS domain.
-5. Set `config/api.js` to the production `/v1` base URL.
+5. Set `services/api-config.js` to the production `/v1` base URL.
 6. Configure the same API host in the WeChat Mini Program request legal domain list.
 7. Use WeChat DevTools to compile, preview on both identities, then upload an experience version.

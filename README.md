@@ -81,4 +81,4 @@ docker compose up --build
 ## 后续方向
 
 - 配置正式微信订阅消息模板 ID。
-- 部署 HTTPS API，设置 `config/api.js` 的 `API_BASE_URL`，并在微信后台加入 request 合法域名。
+- 部署 HTTPS API，设置 `services/api-config.js` 的 `API_BASE_URL`，并在微信后台加入 request 合法域名。

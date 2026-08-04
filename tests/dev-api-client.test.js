@@ -1,5 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
 
 const {
   getDevApiClient,
@@ -32,4 +33,11 @@ test("dev api client keeps cat-created orders visible to owner flow", async () =
   assert.equal(list.orders.length, 1);
   assert.equal(list.orders[0].id, created.order.id);
   assert.equal(list.orders[0].status, "submitted");
+});
+
+test("dev api client keeps runtime config inside the services module tree", () => {
+  const source = fs.readFileSync("services/dev-api-client.js", "utf8");
+
+  assert.equal(source.includes("../config/api"), false);
+  assert.doesNotThrow(() => require("../services/api-config"));
 });
