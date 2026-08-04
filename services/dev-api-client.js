@@ -1,5 +1,5 @@
 const { createMockApiClient } = require("./mock-api-client");
-const { API_BASE_URL } = require("../config/api");
+const { API_BASE_URL } = require("./api-config");
 const { createBackendApiClient } = require("./backend-api-client");
 
 let devApiClient = null;
