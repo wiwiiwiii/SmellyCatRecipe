@@ -53,11 +53,23 @@ function assertCiCacheHasLockfile() {
   }
 }
 
-function assertUnusedFileFilteringDisabled(projectConfig) {
+function assertUnusedFileFilteringDisabled(projectConfig, filePath = "project.config.json") {
   const setting = projectConfig.setting || {};
   for (const key of ["ignoreDevUnusedFiles", "ignoreUploadUnusedFiles"]) {
     if (setting[key] !== false) {
-      throw new Error(`project.config.json setting.${key} must be false for WeChat DevTools page loading`);
+      throw new Error(`${filePath} setting.${key} must be false for WeChat DevTools page loading`);
+    }
+  }
+}
+
+function assertPrivateConfigDoesNotOverrideUnusedFileFiltering() {
+  const privateConfigPath = "project.private.config.json";
+  if (!fs.existsSync(privateConfigPath)) return;
+
+  const setting = readJson(privateConfigPath).setting || {};
+  for (const key of ["ignoreDevUnusedFiles", "ignoreUploadUnusedFiles"]) {
+    if (setting[key] === true) {
+      throw new Error(`${privateConfigPath} setting.${key} must not override dependency filtering to true`);
     }
   }
 }
@@ -69,6 +81,7 @@ function main() {
   assertPageFiles(appJson);
   assertPackIgnores(projectConfig);
   assertUnusedFileFilteringDisabled(projectConfig);
+  assertPrivateConfigDoesNotOverrideUnusedFileFiltering();
   assertOpenApiShape();
   assertCiCacheHasLockfile();
   console.log(`project check ok: ${appJson.pages.length} pages`);
