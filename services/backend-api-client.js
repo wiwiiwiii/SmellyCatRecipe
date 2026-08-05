@@ -89,12 +89,11 @@ function createBackendApiClient({ baseUrl, request = wxRequest } = {}) {
 }
 
 function buildUrl(baseUrl, path, query = {}) {
-  const url = new URL(`${baseUrl}${path}`);
-  for (const [key, value] of Object.entries(query)) {
-    if (value === undefined || value === null || value === "") continue;
-    url.searchParams.set(key, String(value));
-  }
-  return url.toString();
+  const queryString = Object.entries(query)
+    .filter(([, value]) => value !== undefined && value !== null && value !== "")
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+    .join("&");
+  return queryString ? `${baseUrl}${path}?${queryString}` : `${baseUrl}${path}`;
 }
 
 async function resolveWechatLoginInput(input = {}) {

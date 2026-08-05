@@ -1,7 +1,21 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const { createBackendApiClient } = require("../services/backend-api-client");
+const { buildUrl, createBackendApiClient } = require("../services/backend-api-client");
+
+test("backend api client builds URLs without relying on the runtime URL constructor", () => {
+  const originalUrl = global.URL;
+  global.URL = undefined;
+
+  try {
+    assert.equal(
+      buildUrl("http://127.0.0.1:3000/v1", "/menu-items", { mealTime: "dinner", q: "番茄" }),
+      "http://127.0.0.1:3000/v1/menu-items?mealTime=dinner&q=%E7%95%AA%E8%8C%84",
+    );
+  } finally {
+    global.URL = originalUrl;
+  }
+});
 
 test("backend api client stores token and sends bearer auth on later calls", async () => {
   const calls = [];
