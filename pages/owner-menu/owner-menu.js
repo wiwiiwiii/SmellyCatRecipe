@@ -6,6 +6,7 @@ const {
   MOOD_LABELS,
   ROLE,
 } = require("../../services/constants");
+const { loginAsRole } = require("../../services/auth-session");
 const { getDevApiClient } = require("../../services/dev-api-client");
 const {
   buildOwnerMenuEditScrollOptions,
@@ -57,10 +58,7 @@ Page({
     this.setData({ isLoading: true });
 
     try {
-      await api.wechatLogin({
-        code: "dev-code",
-        devRoleOverride: ROLE.OWNER,
-      });
+      await loginAsRole({ api, role: ROLE.OWNER });
       const response = await api.listMenuItems({ includeHidden: true });
       const view = buildOwnerMenuView({ items: response.items });
       this.setData(view);
@@ -162,10 +160,7 @@ Page({
     try {
       const input = buildOwnerMenuItemInput(this.data.form);
       validateMenuInput(input);
-      await api.wechatLogin({
-        code: "dev-code",
-        devRoleOverride: ROLE.OWNER,
-      });
+      await loginAsRole({ api, role: ROLE.OWNER });
 
       if (this.data.editingItemId) {
         await api.updateMenuItem(this.data.editingItemId, input);
@@ -193,10 +188,7 @@ Page({
     if (!item) return;
 
     try {
-      await api.wechatLogin({
-        code: "dev-code",
-        devRoleOverride: ROLE.OWNER,
-      });
+      await loginAsRole({ api, role: ROLE.OWNER });
       await api.updateMenuItem(itemId, {
         hidden: !item.hidden,
       });

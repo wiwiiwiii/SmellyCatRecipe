@@ -37,7 +37,7 @@ docker compose up --build
 
 For backend-connected Mini Program testing, set `API_BASE_URL` in `services/api-config.js` to the HTTPS `/v1` API base URL. Leave it blank when using the mock client.
 
-Production backend auth is private by default: only openids configured in `WECHAT_CAT_OPENIDS` and `WECHAT_OWNER_OPENIDS` can log in. Keep `WECHAT_ALLOW_UNKNOWN_CAT=false` unless intentionally opening the app to unbound users.
+Production backend auth is private by default: only openids configured in `WECHAT_CAT_OPENIDS` and `WECHAT_MASTER_OPENIDS` can log in. `WECHAT_OWNER_OPENIDS` is accepted only as a legacy fallback. Keep `WECHAT_ALLOW_UNKNOWN_CAT=false` unless intentionally opening the app to unbound users.
 
 ## Branch Protection
 

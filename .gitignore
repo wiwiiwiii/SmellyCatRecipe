@@ -4,5 +4,9 @@ dist/
 .superpowers/
 .DS_Store
 project.private.config.json
+docker-compose.override.yml
+.env
+.env.local
+.env.production
 npm-debug.log*
 docs/superpowers

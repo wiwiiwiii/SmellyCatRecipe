@@ -21,7 +21,24 @@ function assertPageFiles(appJson) {
 
 function assertPackIgnores(projectConfig) {
   const ignored = new Set(projectConfig.packOptions.ignore.map((entry) => entry.value));
-  for (const expected of ["docs", "tests", "package.json", "README.md", "LICENSE"]) {
+  for (const expected of [
+    ".dockerignore",
+    ".github",
+    ".env.production.example",
+    "Dockerfile",
+    "backend",
+    "docker-compose.override.yml",
+    "docker-compose.override.yml.example",
+    "docker-compose.yml",
+    "docker-compose.prod.yml",
+    "docs",
+    "package-lock.json",
+    "package.json",
+    "README.md",
+    "scripts",
+    "tests",
+    "LICENSE",
+  ]) {
     if (!ignored.has(expected)) {
       throw new Error(`project.config.json packOptions.ignore must include ${expected}`);
     }
@@ -51,6 +68,13 @@ function assertCiCacheHasLockfile() {
   if (hasNpmCache && !hasLockfile) {
     throw new Error("CI workflow cannot enable setup-node npm cache without a dependency lockfile");
   }
+}
+
+function assertDeploymentHandoffFiles() {
+  assertFileExists("docker-compose.prod.yml");
+  assertFileExists(".env.production.example");
+  assertFileExists(path.join("docs", "deployment.md"));
+  assertFileExists(path.join(".github", "copilot-instructions.md"));
 }
 
 function assertUnusedFileFilteringDisabled(projectConfig, filePath = "project.config.json") {
@@ -84,6 +108,7 @@ function main() {
   assertPrivateConfigDoesNotOverrideUnusedFileFiltering();
   assertOpenApiShape();
   assertCiCacheHasLockfile();
+  assertDeploymentHandoffFiles();
   console.log(`project check ok: ${appJson.pages.length} pages`);
 }
 

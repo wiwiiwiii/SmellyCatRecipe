@@ -1,0 +1,15 @@
+<view class="page">
+  <view class="panel">
+    <view class="eyebrow">本地调试</view>
+    <view class="title">微信登录码</view>
+    <view class="hint">打开这个页面会自动调用 wx.login，并把 code 复制到剪贴板。</view>
+
+    <view class="status">{{status}}</view>
+
+    <view wx:if="{{code}}" class="code-box">{{code}}</view>
+    <view wx:if="{{error}}" class="error-box">{{error}}</view>
+
+    <button class="primary" bindtap="getLoginCode">重新获取</button>
+    <button wx:if="{{code}}" class="secondary" bindtap="copyCode">复制 code</button>
+  </view>
+</view>

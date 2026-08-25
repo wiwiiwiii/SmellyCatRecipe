@@ -45,7 +45,7 @@ function formatOrderMessage(order) {
   const note = order.note || "无";
 
   return [
-    "咪的喂食器点餐单",
+    "小狗咪的喂食器点餐单",
     `给谁：${order.dinerName}`,
     `餐次：${order.mealTime}`,
     `状态：${order.statusText}`,

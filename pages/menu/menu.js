@@ -1,4 +1,5 @@
-const { MEAL_TIME, MOOD } = require("../../services/constants");
+const { MEAL_TIME, MOOD, ROLE } = require("../../services/constants");
+const { loginAsRole } = require("../../services/auth-session");
 const { getDevApiClient } = require("../../services/dev-api-client");
 const {
   buildMenuViewModel,
@@ -168,12 +169,6 @@ Page({
     }
   },
 
-  goOwnerDev() {
-    wx.navigateTo({
-      url: "/pages/owner/owner",
-    });
-  },
-
   goLatestOrder() {
     wx.navigateTo({
       url: "/pages/order/order",
@@ -188,6 +183,7 @@ Page({
 
   async refreshViewModel() {
     try {
+      await loginAsRole({ api, role: ROLE.CAT });
       const response = await api.listMenuItems({});
       const viewModel = buildMenuViewModel({
         mealTime: this.data.mealTime,

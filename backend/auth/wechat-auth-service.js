@@ -80,10 +80,10 @@ async function defaultFetchJson(url) {
 }
 
 function resolveRoleForOpenid(openid, env) {
-  if (splitOpenids(env.WECHAT_OWNER_OPENIDS).includes(openid)) return ROLE.OWNER;
+  if (splitOpenids(env.WECHAT_MASTER_OPENIDS || env.WECHAT_OWNER_OPENIDS).includes(openid)) return ROLE.OWNER;
   if (splitOpenids(env.WECHAT_CAT_OPENIDS).includes(openid)) return ROLE.CAT;
   if (env.WECHAT_ALLOW_UNKNOWN_CAT === "true") return ROLE.CAT;
-  throw createHttpError(403, "WECHAT_OPENID_NOT_ALLOWED", "当前微信没有绑定到咪的喂食器");
+  throw createHttpError(403, "WECHAT_OPENID_NOT_ALLOWED", "当前微信没有绑定到小狗咪的喂食器");
 }
 
 function splitOpenids(value = "") {

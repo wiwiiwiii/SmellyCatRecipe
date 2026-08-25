@@ -1,13 +1,12 @@
 <view class="page safe-bottom">
   <view class="hero">
     <image class="hero-logo" src="/static/img/logo.jpg" mode="aspectFill" />
-    <view class="hero-kicker">咪的喂食器</view>
+    <view class="hero-kicker">小狗咪的喂食器</view>
     <view class="hero-title">{{heroTitle || '咪今天想吃什么？'}}</view>
     <view class="hero-subtitle">{{heroSubtitle}}</view>
     <view class="hero-actions">
       <button wx:if="{{hasLatestOrder}}" class="hero-action hero-action-primary" bindtap="goLatestOrder">看小愿望状态</button>
       <button class="hero-action" bindtap="goHistory">吃过的</button>
-      <button class="hero-action" bindtap="goOwnerDev">主人端测试</button>
     </view>
   </view>
 

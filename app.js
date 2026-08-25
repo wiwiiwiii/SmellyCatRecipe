@@ -1,5 +1,6 @@
 App({
   globalData: {
-    appName: "咪的喂食器",
+    appEnglishName: "Puppy Cat Feeder",
+    appName: "小狗咪的喂食器",
   },
 });
