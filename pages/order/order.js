@@ -1,4 +1,5 @@
 const { ROLE } = require("../../services/constants");
+const { loginAsRole } = require("../../services/auth-session");
 const { getDevApiClient } = require("../../services/dev-api-client");
 const {
   buildCatOrderView,
@@ -100,10 +101,7 @@ Page({
     }
 
     try {
-      await api.wechatLogin({
-        code: "dev-code",
-        devRoleOverride: ROLE.CAT,
-      });
+      await loginAsRole({ api, role: ROLE.CAT });
       const orderId = this.data.order.id;
       const requestId = this.data.pendingReplacementRequest.id;
       const response = accept
@@ -138,10 +136,7 @@ Page({
     }
 
     try {
-      await api.wechatLogin({
-        code: "dev-code",
-        devRoleOverride: ROLE.CAT,
-      });
+      await loginAsRole({ api, role: ROLE.CAT });
       const response = await api.cancelOrder(this.data.order.id, {
         note: "咪不吃了",
       });

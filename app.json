@@ -1,13 +1,15 @@
 {
   "pages": [
+    "pages/launch/launch",
     "pages/menu/menu",
     "pages/order/order",
     "pages/history/history",
     "pages/owner-menu/owner-menu",
-    "pages/owner/owner"
+    "pages/owner/owner",
+    "pages/debug-login/debug-login"
   ],
   "window": {
-    "navigationBarTitleText": "咪的喂食器",
+    "navigationBarTitleText": "小狗咪的喂食器",
     "navigationBarBackgroundColor": "#17110E",
     "navigationBarTextStyle": "white",
     "backgroundColor": "#17110E",

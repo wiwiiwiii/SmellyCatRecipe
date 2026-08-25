@@ -540,6 +540,7 @@ function createMockApiClient({ now = () => new Date(), initialOrders = [] } = {}
   }
 
   return {
+    isBackendApi: false,
     acceptOrder,
     cancelOrder,
     completeOrder,

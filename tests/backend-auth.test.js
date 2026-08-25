@@ -42,7 +42,7 @@ test("wechat auth service maps openid to configured role and upserts user", asyn
       WECHAT_APP_ID: "wx-app-id",
       WECHAT_APP_SECRET: "wx-secret",
       WECHAT_CAT_OPENIDS: "cat-openid",
-      WECHAT_OWNER_OPENIDS: "owner-openid",
+      WECHAT_MASTER_OPENIDS: "master-openid",
       TOKEN_SECRET: "test-secret",
       NODE_ENV: "production",
     },
@@ -51,7 +51,7 @@ test("wechat auth service maps openid to configured role and upserts user", asyn
       assert.equal(url.searchParams.get("secret"), "wx-secret");
       assert.equal(url.searchParams.get("js_code"), "login-code");
       return {
-        openid: "owner-openid",
+        openid: "master-openid",
         session_key: "session-key",
       };
     },
@@ -67,8 +67,35 @@ test("wechat auth service maps openid to configured role and upserts user", asyn
 
   assert.equal(response.user.role, "owner");
   assert.equal(response.user.displayName, "主人");
-  assert.equal(upserts[0].openid, "owner-openid");
+  assert.equal(upserts[0].openid, "master-openid");
   assert.match(response.token, /^app-token\./);
+});
+
+test("wechat auth service keeps legacy owner openid env as a fallback", async () => {
+  const authService = createWechatAuthService({
+    env: {
+      WECHAT_APP_ID: "wx-app-id",
+      WECHAT_APP_SECRET: "wx-secret",
+      WECHAT_CAT_OPENIDS: "cat-openid",
+      WECHAT_OWNER_OPENIDS: "owner-openid",
+      TOKEN_SECRET: "test-secret",
+      NODE_ENV: "production",
+    },
+    fetchJson: async () => ({
+      openid: "owner-openid",
+      session_key: "session-key",
+    }),
+    userRepository: {
+      async upsertWechatUser(user) {
+        return user;
+      },
+    },
+  });
+
+  const response = await authService.wechatLogin({ code: "login-code" });
+
+  assert.equal(response.user.role, "owner");
+  assert.equal(response.user.displayName, "主人");
 });
 
 test("wechat auth service rejects unbound openid in production", async () => {
@@ -77,7 +104,7 @@ test("wechat auth service rejects unbound openid in production", async () => {
       WECHAT_APP_ID: "wx-app-id",
       WECHAT_APP_SECRET: "wx-secret",
       WECHAT_CAT_OPENIDS: "cat-openid",
-      WECHAT_OWNER_OPENIDS: "owner-openid",
+      WECHAT_MASTER_OPENIDS: "master-openid",
       TOKEN_SECRET: "test-secret",
       NODE_ENV: "production",
     },

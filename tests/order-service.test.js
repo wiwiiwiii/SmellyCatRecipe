@@ -40,7 +40,7 @@ test("formats an order message that can be copied to WeChat", () => {
 
   const message = formatOrderMessage(order);
 
-  assert.match(message, /咪的喂食器点餐单/);
+  assert.match(message, /小狗咪的喂食器点餐单/);
   assert.match(message, /今天晚饭/);
   assert.match(message, /番茄炒蛋盖饭/);
   assert.match(message, /米饭少一点/);

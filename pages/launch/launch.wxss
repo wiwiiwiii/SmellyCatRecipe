@@ -1,0 +1,60 @@
+.page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 96rpx 40rpx 48rpx;
+  background: #17110e;
+  color: #fff7ec;
+}
+
+.panel {
+  display: flex;
+  min-height: 72vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.logo {
+  width: 176rpx;
+  height: 176rpx;
+  border: 4rpx solid rgba(255, 177, 102, 0.4);
+  border-radius: 40rpx;
+}
+
+.eyebrow {
+  margin-top: 32rpx;
+  color: #ffb166;
+  font-size: 24rpx;
+  letter-spacing: 0;
+}
+
+.title {
+  margin-top: 14rpx;
+  font-size: 48rpx;
+  font-weight: 700;
+}
+
+.status,
+.error {
+  max-width: 560rpx;
+  margin-top: 24rpx;
+  font-size: 28rpx;
+  line-height: 1.6;
+}
+
+.status {
+  color: rgba(255, 247, 236, 0.78);
+}
+
+.error {
+  color: #ffb2a6;
+}
+
+.retry {
+  margin-top: 36rpx;
+  border-radius: 999rpx;
+  background: #ff9d42;
+  color: #23140d;
+  font-size: 30rpx;
+}

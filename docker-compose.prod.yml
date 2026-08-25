@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - ${PRODUCTION_ENV_FILE:-.env.production}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres-prod-data:/var/lib/postgresql/data
+    networks:
+      - feeder-backend
+
+  api:
+    build: .
+    restart: unless-stopped
+    command: sh -c "npm run backend:migrate && npm run backend:seed && node backend/server.js"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - ${PRODUCTION_ENV_FILE:-.env.production}
+    environment:
+      NODE_ENV: production
+      PGSSL: "false"
+      PORT: 3000
+    ports:
+      - "${API_HOST_BIND:-127.0.0.1}:3000:3000"
+    networks:
+      - feeder-backend
+
+networks:
+  feeder-backend:
+    driver: bridge
+
+volumes:
+  postgres-prod-data:

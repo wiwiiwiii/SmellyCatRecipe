@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: Smelly Cat Feeder API
+  title: Puppy Cat Feeder API
   version: 0.1.0
-  description: API contract for the "咪的喂食器" WeChat mini-program and self-hosted backend.
+  description: API contract for the "小狗咪的喂食器" / "Puppy Cat Feeder" WeChat mini-program and self-hosted backend.
 servers:
   - url: https://api.example.com/v1
     description: Replace with the production HTTPS API domain before launch.

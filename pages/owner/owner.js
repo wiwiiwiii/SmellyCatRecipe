@@ -1,4 +1,5 @@
 const { ROLE } = require("../../services/constants");
+const { loginAsRole } = require("../../services/auth-session");
 const { getDevApiClient } = require("../../services/dev-api-client");
 const {
   buildOwnerOrderDetailView,
@@ -31,10 +32,7 @@ Page({
     this.setData({ isLoading: true });
 
     try {
-      await api.wechatLogin({
-        code: "dev-code",
-        devRoleOverride: ROLE.OWNER,
-      });
+      await loginAsRole({ api, role: ROLE.OWNER });
 
       const response = await api.listOrders({ scope: "current" });
       const menuResponse = await api.listMenuItems({});
@@ -144,10 +142,7 @@ Page({
     const { originalId, replacementId, replacementName } = event.currentTarget.dataset;
 
     try {
-      await api.wechatLogin({
-        code: "dev-code",
-        devRoleOverride: ROLE.OWNER,
-      });
+      await loginAsRole({ api, role: ROLE.OWNER });
       await api.requestReplacement(this.data.detail.order.id, {
         replacements: [
           {
@@ -181,10 +176,7 @@ Page({
     }
 
     try {
-      await api.wechatLogin({
-        code: "dev-code",
-        devRoleOverride: ROLE.OWNER,
-      });
+      await loginAsRole({ api, role: ROLE.OWNER });
       await api.cancelOrder(this.data.detail.order.id, {
         note: "主人取消了这单",
       });
@@ -200,12 +192,6 @@ Page({
         icon: "none",
       });
     }
-  },
-
-  goCatMenu() {
-    wx.navigateBack({
-      delta: 1,
-    });
   },
 
   goOwnerMenu() {

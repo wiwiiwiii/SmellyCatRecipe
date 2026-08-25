@@ -9,6 +9,7 @@ const {
   canCancelOrder,
   getStatusCopy,
 } = require("./order-state");
+const { loginAsRole } = require("./auth-session");
 
 async function loadLatestCatOrder({ api, storage }) {
   const draft = storage.getStorageSync("draftOrder");
@@ -89,17 +90,14 @@ function createCatOrderDraft(orderInput) {
   };
 }
 
-async function sendCatOrderDraft({ api, storage }) {
+async function sendCatOrderDraft({ api, apiBaseUrl, storage }) {
   const draft = storage.getStorageSync("draftOrder");
   if (!isRenderableDraft(draft)) {
     throw new Error("还没有可以发送的点餐单");
   }
 
   if (api && typeof api.wechatLogin === "function") {
-    await api.wechatLogin({
-      code: "dev-code",
-      devRoleOverride: ROLE.CAT,
-    });
+    await loginAsRole({ api, apiBaseUrl, role: ROLE.CAT });
   }
 
   const response = await api.createOrder(draft.input);
@@ -204,7 +202,7 @@ function formatCatOrderMessage(order) {
   });
 
   return [
-    "咪的喂食器点餐单",
+    "小狗咪的喂食器点餐单",
     `餐次：${MEAL_TIME_LABELS[order.mealTime] || order.mealTime}`,
     `状态：${MOOD_LABELS[order.mood] || order.mood}`,
     ...itemLines,

@@ -1,9 +1,53 @@
 {
-  "description": "咪的喂食器微信小程序启动项目",
+  "description": "小狗咪的喂食器 Puppy Cat Feeder 微信小程序项目",
   "packOptions": {
     "ignore": [
       {
+        "value": ".dockerignore",
+        "type": "file"
+      },
+      {
+        "value": ".github",
+        "type": "folder"
+      },
+      {
+        "value": ".env.production.example",
+        "type": "file"
+      },
+      {
+        "value": "Dockerfile",
+        "type": "file"
+      },
+      {
+        "value": "backend",
+        "type": "folder"
+      },
+      {
+        "value": "docker-compose.override.yml",
+        "type": "file"
+      },
+      {
+        "value": "docker-compose.override.yml.example",
+        "type": "file"
+      },
+      {
+        "value": "docker-compose.yml",
+        "type": "file"
+      },
+      {
+        "value": "docker-compose.prod.yml",
+        "type": "file"
+      },
+      {
         "value": "docs",
+        "type": "folder"
+      },
+      {
+        "value": "package-lock.json",
+        "type": "file"
+      },
+      {
+        "value": "scripts",
         "type": "folder"
       },
       {
@@ -57,7 +101,7 @@
   "compileType": "miniprogram",
   "libVersion": "3.7.12",
   "appid": "wx51db6b92804d602e",
-  "projectname": "咪的喂食器",
+  "projectname": "小狗咪的喂食器",
   "miniprogramRoot": "./",
   "condition": {},
   "simulatorPluginLibVersion": {},

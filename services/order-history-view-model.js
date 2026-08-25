@@ -4,6 +4,7 @@ const {
   ORDER_STATUS,
   ROLE,
 } = require("./constants");
+const { loginAsRole } = require("./auth-session");
 const { createCatOrderDraft } = require("./cat-order-view-model");
 const { getStatusCopy } = require("./order-state");
 
@@ -29,21 +30,15 @@ function buildCatOrderHistoryView({ orders = [] }) {
   };
 }
 
-async function loadCatOrderHistory({ api }) {
-  await api.wechatLogin({
-    code: "dev-code",
-    devRoleOverride: ROLE.CAT,
-  });
+async function loadCatOrderHistory({ api, apiBaseUrl } = {}) {
+  await loginAsRole({ api, apiBaseUrl, role: ROLE.CAT });
 
   const response = await api.listOrders({ scope: "history" });
   return buildCatOrderHistoryView({ orders: response.orders });
 }
 
-async function createRepeatOrderDraft({ api, storage, orderId }) {
-  await api.wechatLogin({
-    code: "dev-code",
-    devRoleOverride: ROLE.CAT,
-  });
+async function createRepeatOrderDraft({ api, apiBaseUrl, storage, orderId }) {
+  await loginAsRole({ api, apiBaseUrl, role: ROLE.CAT });
 
   const repeatInput = await api.createRepeatDraft(orderId);
   const draft = createCatOrderDraft(repeatInput);

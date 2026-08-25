@@ -30,7 +30,7 @@ services:
       WECHAT_APP_ID: local-dev-app-id
       WECHAT_APP_SECRET: local-dev-app-secret
       WECHAT_CAT_OPENIDS: dev-cat-openid
-      WECHAT_OWNER_OPENIDS: dev-owner-openid
+      WECHAT_MASTER_OPENIDS: dev-owner-openid
     ports:
       - "3000:3000"
 

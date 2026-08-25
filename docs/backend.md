@@ -98,7 +98,7 @@ TOKEN_SECRET=replace-with-a-long-random-secret
 WECHAT_APP_ID=replace-with-wechat-mini-program-app-id
 WECHAT_APP_SECRET=replace-with-wechat-mini-program-app-secret
 WECHAT_CAT_OPENIDS=cat-openid
-WECHAT_OWNER_OPENIDS=owner-openid
+WECHAT_MASTER_OPENIDS=master-openid
 WECHAT_ALLOW_UNKNOWN_CAT=false
 WECHAT_MINIPROGRAM_STATE=formal
 WECHAT_TEMPLATE_OWNER_NEW_ORDER=
@@ -108,7 +108,60 @@ WECHAT_TEMPLATE_CAT_ORDER_COOKING=
 WECHAT_TEMPLATE_CAT_ORDER_COMPLETED=
 ```
 
-`WECHAT_ALLOW_UNKNOWN_CAT=false` is the production default for a private app. Any WeChat user whose `openid` is not listed in `WECHAT_CAT_OPENIDS` or `WECHAT_OWNER_OPENIDS` receives `WECHAT_OPENID_NOT_ALLOWED`.
+For local Docker Compose development, copy `docker-compose.override.yml.example` to
+`docker-compose.override.yml` and fill the real WeChat secret there. The override
+file is ignored by Git and is auto-loaded by Docker Compose:
+
+```yaml
+services:
+  api:
+    environment:
+      WECHAT_APP_ID: wx51db6b92804d602e
+      WECHAT_APP_SECRET: replace-with-your-wechat-app-secret
+      WECHAT_CAT_OPENIDS: replace-with-cat-openid
+      WECHAT_MASTER_OPENIDS: replace-with-master-openid
+```
+
+To get openids, first get a one-time `wx.login` code from the WeChat account you
+want to bind. In WeChat DevTools Console, or a real-device debugging Console, run:
+
+```js
+wx.login({
+  success(res) {
+    console.log("wx.login raw:", JSON.stringify(res));
+    const code = res && res.code;
+    console.log("wx.login code:", code || "NO_CODE");
+    if (code) {
+      wx.setClipboardData({ data: code });
+      wx.showModal({ title: "wx.login code", content: code, showCancel: false });
+    }
+  },
+  fail(err) {
+    console.error("wx.login fail:", JSON.stringify(err));
+  },
+  complete(res) {
+    console.log("wx.login complete:", JSON.stringify(res));
+  },
+});
+```
+
+Then exchange that short-lived code locally. Do not paste the AppSecret into chat
+or commit it to Git:
+
+```bash
+export WECHAT_APP_ID=wx51db6b92804d602e
+printf "WeChat AppSecret: "
+read -s WECHAT_APP_SECRET
+echo
+export WECHAT_APP_SECRET
+npm run wechat:openid -- paste-wx-login-code-here
+unset WECHAT_APP_SECRET
+```
+
+Repeat once with the owner's WeChat account and once with the cat's WeChat
+account, then put the two returned openids into `docker-compose.override.yml`.
+
+`WECHAT_ALLOW_UNKNOWN_CAT=false` is the production default for a private app. Any WeChat user whose `openid` is not listed in `WECHAT_CAT_OPENIDS` or `WECHAT_MASTER_OPENIDS` receives `WECHAT_OPENID_NOT_ALLOWED`. `WECHAT_OWNER_OPENIDS` is still accepted as a legacy fallback, but new local and deployment config should use `WECHAT_MASTER_OPENIDS`.
 
 Subscription message sending uses the configured template IDs. Choose WeChat templates whose fields match the backend payload:
 
@@ -131,6 +184,8 @@ Leave it blank for mock-only local UI work.
 The Mini Program must add the API host as a WeChat `request` legal domain before real-device testing or release upload.
 
 ## Deployment Checklist
+
+For the full production server runbook, see `docs/deployment.md`.
 
 1. Provision PostgreSQL and set all backend environment variables, including WeChat template IDs.
 2. Run `npm run backend:migrate` against the production database.

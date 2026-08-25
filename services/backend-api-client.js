@@ -21,6 +21,7 @@ function createBackendApiClient({ baseUrl, request = wxRequest } = {}) {
   }
 
   return {
+    isBackendApi: true,
     async wechatLogin(input) {
       const response = await call("POST", "/auth/wechat-login", { body: await resolveWechatLoginInput(input) });
       token = response.token || "";

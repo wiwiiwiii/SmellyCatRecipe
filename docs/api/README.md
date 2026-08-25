@@ -1,4 +1,6 @@
-# 咪的喂食器 API Contract
+# 小狗咪的喂食器 API Contract
+
+English name: Puppy Cat Feeder
 
 ## 目标
 
@@ -117,7 +119,7 @@
 }
 ```
 
-`devRoleOverride` 只允许开发环境使用，正式环境忽略。正式环境只允许配置在 `WECHAT_CAT_OPENIDS` 或 `WECHAT_OWNER_OPENIDS` 中的微信用户登录。
+`devRoleOverride` 只允许开发环境使用，正式环境忽略。正式环境只允许配置在 `WECHAT_CAT_OPENIDS` 或 `WECHAT_MASTER_OPENIDS` 中的微信用户登录；`WECHAT_OWNER_OPENIDS` 仅作为旧配置兼容。
 
 响应：
 

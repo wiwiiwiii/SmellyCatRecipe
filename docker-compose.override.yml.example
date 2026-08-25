@@ -1,0 +1,12 @@
+# Copy this file to docker-compose.override.yml and fill local-only secrets.
+# docker-compose.override.yml is ignored by Git and auto-loaded by Docker Compose.
+
+services:
+  api:
+    environment:
+      TOKEN_SECRET: replace-with-a-long-random-local-token-secret
+      WECHAT_APP_ID: wx51db6b92804d602e
+      WECHAT_APP_SECRET: replace-with-your-wechat-app-secret
+      WECHAT_CAT_OPENIDS: replace-with-cat-openid
+      WECHAT_MASTER_OPENIDS: replace-with-master-openid
+      WECHAT_ALLOW_UNKNOWN_CAT: "false"
